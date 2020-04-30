@@ -2,9 +2,24 @@
 
 ## Quickstart
 ```bash
-# check your platform: CC7 shown below, for SL6 it would be "x86_64-slc6-gcc8-opt"
-source /cvmfs/sft.cern.ch/lcg/views/LCG_96python3/x86_64-centos7-gcc8-opt/setup.sh  # or .csh, etc.
-git clone git@github.com:nsmith-/boostedhiggs.git
+git clone git@github.com:jeffkrupa-/boostedhiggs.git
 cd boostedhiggs
 pip install --user --editable .
 ```
+
+
+## Add tensorflow capability
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh -b -p miniconda/
+source miniconda/bin/activate
+conda create -n tf tensorflow
+conda activate tf
+pip install coffea
+
+# To make the environment transportable
+conda install -c conda-forge conda-pack
+conda-pack
+```
+
+
