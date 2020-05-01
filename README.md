@@ -16,6 +16,7 @@ source miniconda/bin/activate
 conda create -n tf tensorflow
 conda activate tf
 pip install coffea
+conda install -c conda-forge xrootd
 
 # To make the environment transportable
 conda install -c conda-forge conda-pack

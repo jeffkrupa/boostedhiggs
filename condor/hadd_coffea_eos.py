@@ -3,7 +3,7 @@ import json
 import os
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
-indir = "Apr30_21"
+indir = "Apr30_26"
 
 os.system("mkdir -p %s" % indir)
 

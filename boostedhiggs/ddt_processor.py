@@ -28,8 +28,8 @@ class DDTProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 300, 400, 1200),
-                hist.Bin('jet_rho', r'Jet $\rho$', 300, -7., -1.),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 180, 400, 1200),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -6., -1.5),
                 hist.Bin('jet_twoProngGru', r'Jet GRU [GeV]', 100, 0., 1.),
             ),
             'cutflow': hist.Hist(
