@@ -27,11 +27,19 @@ logdir = label
 outdir = '/store/user/jkrupa/coffea/'+logdir+'/'
 
 samplelist = {
-    'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    #'VectorZPrimeToQQ_M100_pT300_TuneCP5_madgraph_pythia8_13TeV': '2017',
+    'WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+    'WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+    'WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+    'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+    'ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+    'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+  
 }
 
 #################################################
@@ -39,7 +47,7 @@ samplelist = {
 os.chdir('..')
 os.system('xrdcp -f test/%s root://cmseos.fnal.gov//store/user/jkrupa/'%script)
 if (len(args.settings) is 4):
-    os.system('tar -vzcf dazsle_coffea.tgz . --exclude="*.root" --exclude="*.pdf" --exclude="*.pyc" --exclude="nobackup" --exclude="nobackup1" --exclude=tmp --exclude="*.tgz" --exclude="*tar.gz" --exclude="*std*" --exclude-vcs --exclude-caches-all')
+    os.system('tar -vzcf dazsle_coffea.tgz . --exclude="*.root" --exclude="*.pdf" --exclude="*.pyc" --exclude="nobackup" --exclude="nobackup1" --exclude=tmp --exclude="*.tgz" --exclude="*tar.gz" --exclude="*std*" --exclude="*sum.coffea" --exclude-vcs --exclude-caches-all')
     os.system('xrdcp -f dazsle_coffea.tgz root://cmseos.fnal.gov//store/user/jkrupa/dazsle_coffea.tgz')
 os.chdir(loc_base)
 
@@ -67,7 +75,7 @@ os.system('mkdir -p /eos/uscms'+outdir)
 totfiles = {}
 
 
-with open('../data/ULQCD.json', 'r') as f:
+with open('../data/fileset2017.json', 'r') as f:
     newfiles = json.load(f)
     totfiles.update(newfiles)
 
