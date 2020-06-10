@@ -8,6 +8,7 @@ collection_methods["FatJetPFCands"] = Candidate
 from boostedhiggs.corrections import (
     corrected_msoftdrop,
     gruddt_shift,
+    n2ddt_shift,
     add_pileup_weight,
     add_jetTriggerWeight,
 )
@@ -35,10 +36,13 @@ class ZQQProcessor(processor.ProcessorABC):
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
                 #hist.Cat('systematic', 'Systematic'),
-                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [525, 575, 625, 700, 800, 1500]),
+                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [525,575,625,700,800,1500]),
                 hist.Bin('msd', r'Jet $m_{sd}$', 62, 40, 350),
-                hist.Bin('gruddt', 'GRU$^{DDT}$ value', 80, -1.0, 1.0),
-                hist.Bin('gru','GRU value',80,0.,1.),
+                hist.Bin('gruddt', 'GRU$^{DDT}$ value',100,-1.,1.),
+                hist.Bin('gru', 'GRU value',100,0.,1.),
+                hist.Bin('rho', 'jet rho', [-6.,-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.,-1.5,-1.]),
+                #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', 50, -0.4, 0.4),
+                #hist.Bin('gru','GRU value',80,0.,1.),
             ),
             #'gruddt' : hist.Hist(
             #    hist.Cat('dataset', 'Dataset'),
@@ -86,8 +90,9 @@ class ZQQProcessor(processor.ProcessorABC):
         fatjets['rho'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
 
         fatjets['gruddt'] = fatjets.twoProngGru - gruddt_shift(fatjets,year=self._year)
+        fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
       
-
+        print(type(dataset))
         if 'QCD' not in dataset: 
           zprime = events.GenPart[((events.GenPart.pdgId==55) | (events.GenPart.pdgId==23) | (abs(events.GenPart.pdgId)==24)) & events.GenPart.hasFlags(["isLastCopy"])].flatten()
           assert len(zprime) == len(events)
@@ -139,12 +144,12 @@ class ZQQProcessor(processor.ProcessorABC):
             # bacon iso looser than Nano selection
         ).sum()
         selection.add('noleptons', (nmuons == 0) & (nelectrons == 0) & (ntaus == 0))
-        weights.add('genweight', events.genWeight)
-        add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
-        add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
+        #weights.add('genweight', events.genWeight)
+        #add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
+        #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
         
         regions = {
-           'signal' : ['fatjet_trigger', 'minjetkin','jetid','noleptons']
+           'signal' : ['fatjet_trigger', 'minjetkin','noleptons','jetid']
         }
         for region, cuts in regions.items():
             allcuts = set()
@@ -169,7 +174,9 @@ class ZQQProcessor(processor.ProcessorABC):
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(candidatejet.msdcorr, cut),
                 gruddt=normalize(candidatejet.gruddt, cut),
+                #n2ddt=normalize(candidatejet.n2ddt, cut),
                 gru=normalize(candidatejet.twoProngGru, cut),
+                rho=normalize(candidatejet.rho, cut),
             )
 
         for region in regions:

@@ -35,7 +35,7 @@ def corrected_msoftdrop(fatjets):
 
 
 def gruddt_shift(fatjets, year='2017'):
-    return compiled[f'{year}_gruddt_rho_pt'](fatjets.rho, fatjets.pt)
+    return compiled[f'2017_gruddt_attemptoverflownone_rho_pt'](fatjets.rho, fatjets.pt)
 
 def n2ddt_shift(fatjets, year='2017'):
     return compiled[f'{year}_n2ddt_rho_pt'](fatjets.rho, fatjets.pt)

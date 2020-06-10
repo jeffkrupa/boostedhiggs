@@ -13,7 +13,7 @@ def run_processor(year,selsamples,starti,endi,outname):
     
     files = {}
     
-    with open('../data/ULQCD.json', 'r') as f:
+    with open('../data/fileset2017.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
     

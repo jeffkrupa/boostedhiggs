@@ -33,8 +33,8 @@ class DDTProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 180, 400, 1200),
-                hist.Bin('jet_rho', r'Jet $\rho$', 180, -6., -1.5),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1200),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -7., -1.5),
                 hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
             ),
             'cutflow': hist.Hist(
@@ -56,6 +56,7 @@ class DDTProcessor(processor.ProcessorABC):
         selection = processor.PackedSelection()
         weights = processor.Weights(len(events))
         output = self.accumulator.identity()
+        output['sumw'][dataset] += events.genWeight.sum()
 
         trigger_fatjet = np.zeros(events.size, dtype='bool')
 
@@ -108,14 +109,15 @@ class DDTProcessor(processor.ProcessorABC):
             & (events.Tau.idDecayMode).astype(bool)
             # bacon iso looser than Nano selection
         ).sum()
+        selection.add('jetid', candidatejet.isTight.any())
 
         selection.add('noleptons', (nmuons == 0) & (nelectrons == 0) & (ntaus == 0))
-        weights.add('genweight', events.genWeight)
-        add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
-        add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
+        #weights.add('genweight', events.genWeight)
+        #add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
+        #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
 
         regions = {
-           'signal' : ['fatjet_trigger', 'minjetkin','noleptons']
+           'signal' : ['fatjet_trigger', 'minjetkin','noleptons','jetid']
         }
         for region, cuts in regions.items():
             allcuts = set()
