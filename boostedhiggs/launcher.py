@@ -26,8 +26,8 @@ events = NanoEvents.from_file(
     methods={"FatJetPFCands": Candidate}
 )
 #p = ZQQProcessor(year='2017')
-#p = ZQQProcessor(year='2017')
-p = DDTProcessor(year='2017')
+p = ZQQProcessor(year='2017')
+#p = DDTProcessor(year='2017')
 out = p.process(events)
 
 save(out, 'test.coffea')

@@ -12,10 +12,11 @@ import os
 corrections = load('data/corrections.coffea')
 
 # add gruddt correction derived with 2017 QCD
-shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_QCD_debug_5.coffea'))
-values = list(shift_hist.values(overflow='none').values())[0]
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_QCD_debug_6.coffea'))
+values = shift_hist.values(overflow='none')[()]
 rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
 pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
+print(rho_bins,pt_bins)
 corrections['2017_gruddt_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (rho_bins,pt_bins))
 print(corrections['2017_gruddt_rho_pt'])
 save(corrections, 'data/corrections_2.coffea')

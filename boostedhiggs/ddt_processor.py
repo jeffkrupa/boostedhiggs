@@ -33,8 +33,8 @@ class DDTProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1200),
-                hist.Bin('jet_rho', r'Jet $\rho$', 180, -7., -1.5),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 525, 1500),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
                 hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
             ),
             'cutflow': hist.Hist(
@@ -72,12 +72,14 @@ class DDTProcessor(processor.ProcessorABC):
 
         fatjets = events.FatJet
         fatjets['msdcorr'] = corrected_msoftdrop(fatjets)
+        fatjets['rhocorr'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
         candidatejet = fatjets[
             # https://github.com/DAZSLE/BaconAnalyzer/blob/master/Analyzer/src/VJetLoader.cc#L269
             (fatjets.pt > 250)
             & (abs(fatjets.eta) < 2.5)
             # & fatjets.isLoose  # not always available
-
+            & (fatjets.rhocorr >= -5.5)
+            & (fatjets.rhocorr <= -2)
         ][:, 0:1]
 
         #events.FatJet = candidatejet
@@ -85,7 +87,7 @@ class DDTProcessor(processor.ProcessorABC):
 
         # basic jet selection
         selection.add('minjetkin', (
-            (candidatejet.pt >= 450)
+            (candidatejet.pt >= 525)
             & (candidatejet.msdcorr >= 40.)
             & (abs(candidatejet.eta) < 2.5)
         ).any())

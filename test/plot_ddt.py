@@ -20,7 +20,7 @@ import argparse
 import processmap
 from hists_map import *
 
-_rhobins = [-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.0,-1.5]
+_rhobins = [-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.0,]
 plt.rcParams.update({
         'font.size': 22,
         'axes.titlesize': 18,
@@ -44,13 +44,13 @@ err_opts = {
 def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savename):
 
 
-    tmp = h.integrate('pt',slice(800,1500),overflow='none')
+    tmp = h.integrate('pt',slice(525,575),overflow='none')
     qcd_rho = tmp.sum(*[ax for ax in h.axes() if ax.name not in ['rho','pt','gruddt']])#.values(overflow='allnan')[()]
     print(qcd_rho)
     qcd_gruddt = {}
     for i in range(len(_rhobins)):
        if i == len(_rhobins) - 1: continue
-       qcd_gruddt["%.1f_%.1f"%(_rhobins[i],_rhobins[i+1])] = qcd_rho.integrate('rho',slice(_rhobins[i],_rhobins[i+1]),overflow='none').values(overflow='none')[()]
+       qcd_gruddt["[%.1f,%.1f]"%(_rhobins[i],_rhobins[i+1])] = qcd_rho.integrate('rho',slice(_rhobins[i],_rhobins[i+1]),overflow='none').values(overflow='none')[()]
     print(qcd_gruddt)
     gruaxis=qcd_rho.axis('gruddt').centers(overflow='none')
     fig,ax = plt.subplots()

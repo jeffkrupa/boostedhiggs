@@ -15,9 +15,12 @@ skip =  [
 'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_11',
 ]
 eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
-indir = "QCD_VJets_VDJM100_QCDdebug5"
+#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3"
+#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_2"
+#indir ="QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_3_rhocorrfix"
+#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_3_rhocorrfix_2"
 #indir = "gru_4"
-
+indir = "QCD_VJets_VDJM100_QCDdebug6_nosmooth"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 10
@@ -33,7 +36,7 @@ for name in onlyfiles:
   #if name in skip: print('hi'); continue
   #if 'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_3' in name or 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_4' in name or 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_5' in name: continue
   #if 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_4' in name: continue
-  if 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_2' in name: continue
+  #if 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_2' in name: continue
   names.append("%s%s/%s.coffea" % (eosdir,indir,name))
 
 print(len(names))
@@ -56,7 +59,7 @@ for i in range(0,len(names),chunk_size):
         flist[0][key] = flist[0][key] + flist[fi][key]
   
   print(flist[0])
-  flist[0]['templates'] = flist[0]['templates'].sum('gru',)  
+  #flist[0]['templates'] = flist[0]['templates'].sum('gru',)  
   util.save(flist[0],'%s/hists_sum_%i.coffea' % (indir,i))
 
   for f in flist:

@@ -38,9 +38,9 @@ class ZQQProcessor(processor.ProcessorABC):
                 #hist.Cat('systematic', 'Systematic'),
                 hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [525,575,625,700,800,1500]),
                 hist.Bin('msd', r'Jet $m_{sd}$', 62, 40, 350),
-                hist.Bin('gruddt', 'GRU$^{DDT}$ value',100,-1.,1.),
-                hist.Bin('gru', 'GRU value',100,0.,1.),
-                hist.Bin('rho', 'jet rho', [-6.,-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.,-1.5,-1.]),
+                hist.Bin('gruddt', 'GRU$^{DDT}$ value',200,-1.,1.),
+                #hist.Bin('gru', 'GRU value',100,0.,1.),
+                hist.Bin('rho', 'jet rho', [-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.]),
                 #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', 50, -0.4, 0.4),
                 #hist.Bin('gru','GRU value',80,0.,1.),
             ),
@@ -87,10 +87,10 @@ class ZQQProcessor(processor.ProcessorABC):
         fatjets = events.FatJet
 
         fatjets['msdcorr'] = corrected_msoftdrop(fatjets)
-        fatjets['rho'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
+        fatjets['rhocorr'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
 
         fatjets['gruddt'] = fatjets.twoProngGru - gruddt_shift(fatjets,year=self._year)
-        fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
+        #fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
       
         print(type(dataset))
         if 'QCD' not in dataset: 
@@ -105,8 +105,8 @@ class ZQQProcessor(processor.ProcessorABC):
             # https://github.com/DAZSLE/BaconAnalyzer/blob/master/Analyzer/src/VJetLoader.cc#L269
             (fatjets.pt > 250)
             & (abs(fatjets.eta) < 2.5)
-            & (fatjets.rho >= -5.5)
-            & (fatjets.rho <= -2)
+            & (fatjets.rhocorr >= -5.5)
+            & (fatjets.rhocorr <= -2)
             & (fatjets.genMatchFull if 'QCD' not in dataset else fatjets.pt > 0)
             # & fatjets.isLoose  # not always available
 
@@ -175,8 +175,8 @@ class ZQQProcessor(processor.ProcessorABC):
                 msd=normalize(candidatejet.msdcorr, cut),
                 gruddt=normalize(candidatejet.gruddt, cut),
                 #n2ddt=normalize(candidatejet.n2ddt, cut),
-                gru=normalize(candidatejet.twoProngGru, cut),
-                rho=normalize(candidatejet.rho, cut),
+                #gru=normalize(candidatejet.twoProngGru, cut),
+                rho=normalize(candidatejet.rhocorr, cut),
             )
 
         for region in regions:

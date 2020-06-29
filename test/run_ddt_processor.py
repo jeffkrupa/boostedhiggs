@@ -21,7 +21,7 @@ def run_processor(year,selsamples,starti,endi,outname):
     
     selfiles = {k: files[k][starti:endi] for k in selsamples}
     
-    args = {'nano': True, 'workers': 4, 'savemetrics': True}
+    args = {'nano': True, 'workers': 1, 'savemetrics': True}
     out, metrics = processor.run_uproot_job(selfiles, 'Events', p, processor.iterative_executor, args)
     
     #xs = {}

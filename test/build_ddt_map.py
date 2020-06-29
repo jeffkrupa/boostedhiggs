@@ -16,11 +16,11 @@ HISTNAME = "jet_kin"
 def plot(template, name):
     plt.clf()
 
-    z = list(template._sumw.values())[0]
+    #z = list(template._sumw.values())[0]
     
     #print(np.amin(z[z>0]), np.amax(z))   
 
-    ax = hist.plot2d(template, xaxis = "jet_rho", patch_opts={"vmin":0.75, "vmax":0.99})
+    ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.75, "vmax":0.99})#,xoverflow='all',yoverflow='all')
     cmstext = plt.text(0., 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
     addtext = plt.text(0.11, 1., "Simulation Preliminary",fontsize=10,horizontalalignment='left',verticalalignment='bottom', style='italic', transform=ax.transAxes)
 
@@ -34,42 +34,64 @@ def build_ddt_map(coffeafile, percentile, postfix):
 
     # adapted from https://github.com/SangeonPark/coffeandbacon/blob/master/analysis/DDT_Map_Derivation.ipynb
     hists = load(coffeafile)
-    histo = hists[HISTNAME].sum('dataset','region',overflow='none') #hist of pt, rho, gru scores
-    val_QCD = histo.values(overflow='allnan')[()]
+    histo = hists[HISTNAME].sum('dataset','region',overflow='all') #hist of pt, rho, gru scores
+
+    print(hists[HISTNAME].sum('dataset','region',overflow='all').values(overflow='all')[()].shape)
+    print(hists[HISTNAME].sum('dataset','region',overflow='all').values(overflow='none')[()].shape)
+    
+    print(hists[HISTNAME].sum('dataset','region',overflow='none').values(overflow='all')[()].shape)
+    print(hists[HISTNAME].sum('dataset','region',overflow='none').values(overflow='none')[()].shape)
+    val_QCD = histo.values(overflow='none')[()]
+    print(val_QCD.shape)
+    #print(val_QCD[0])
+    #print('val_QCD shape', val_QCD.shape)
+    #print(histo.axis('jet_pt').edges())
     #val_QCD = val_QCD[()] 
 
     #sum hists and normalize
     qcd_maxval_temp = np.cumsum(val_QCD, axis=2)
     qcd_maxval = qcd_maxval_temp[:,:,-1]
-    norma = qcd_maxval_temp / np.maximum(1e-3,qcd_maxval[:,:,np.newaxis])
-    print(norma)
-    print(norma.shape)
+    norma = qcd_maxval_temp / np.maximum(1e-10,qcd_maxval[:,:,np.newaxis])
+    #print(norma)
+    #print(norma.shape)
     hist_y_QCD = histo
-    template = histo.sum(DISCRIMINATOR) #pt, rho base
+    template = histo.sum(DISCRIMINATOR)#,overflow='all') #pt, rho base
+    print(template.values(overflow='none')[()])  
+    print(template.values(overflow='none')[()].shape)  
+    #print(len(histo.axis('jet_pt').edges()))
+    #print(template.axis('jet_pt').edges())
+    #print(template.axis('jet_pt').edges(overflow='allnan'))
     hist_y_QCD.clear()
     raw_cut = hist_y_QCD.sum(DISCRIMINATOR)
     hist_y_QCD._sumw = {():norma}
 
 
     res = np.apply_along_axis(lambda norma: norma.searchsorted(args.percentile), axis = 2, arr = norma)
-    res[res>100]=0
+    res[res>=100]=0
+    #print(res[:,:].shape)
     #print(res)
-    print('shape',hist_y_QCD.values(overflow='none')[()].shape)
-    print(hist_y_QCD.values()[()])
+    #print('shape',hist_y_QCD.values(overflow='allnan')[()].shape)
+    #print(hist_y_QCD.values()[()])
     def bineval(a):
         return hist_y_QCD.identifiers(DISCRIMINATOR)[a].lo
 
     binfunc = np.vectorize(bineval)
 
     qmap = binfunc(res)
-
+  
+    #print(histo.axis('jet_pt').edges)
+    histo1 = histo.integrate('jet_pt',slice(525,575))
+    #print(histo1)
+    print(qmap)
+    print(qmap.shape)
     template.clear()
     template._sumw = {():qmap}
     template.label = 'GRU cut at ' + str(int(100*percentile)) + '%'
-
-    plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
+    #print(template.values(overflow='all'))
+    #print(template.values(overflow='all')[()].shape)
     save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
 
+    #plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
     '''
     #print(template)
     template.scale(-1.)
@@ -83,11 +105,10 @@ def build_ddt_map(coffeafile, percentile, postfix):
     template.clear()
     template._sumw = {():smooth_qmap}
     template.label = 'GRU cut at ' + str(100*percentile) + '% (smoothed)'
-
     values_nonan = template.values()[()]
 
-    plot(template, 'ddt_%i_smoothed_%s'%(int(100*percentile), postfix))
     save(template, '../boostedhiggs/ddtmap_smooth_%s.coffea'%postfix) 
+    #plot(template, 'ddt_%i_smoothed_%s'%(int(100*percentile), postfix))
     '''
     import ROOT
     outfile = ROOT.TFile("plots/n2ddtmap_2018bits_GaussianSmoothing1Sigma_CorrectVersion.root","recreate")
