@@ -25,9 +25,9 @@ plt.rcParams.update({
         'font.size': 22,
         'axes.titlesize': 18,
         'axes.labelsize': 18,
-        'xtick.labelsize': 12,
-        'ytick.labelsize': 12,
-        #'text.usetex': False,
+        'xtick.labelsize': 16,
+        'ytick.labelsize': 16,
+        #'text.usetex': True,
         })
 
 fill_opts = {
@@ -41,33 +41,43 @@ err_opts = {
     'edgecolor':(0,0,0,.5),
     'linewidth': 0
     }
-def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savename):
+def drawSolo(h,sel,vars_cut,savename):
 
-
-    tmp = h.integrate('pt',slice(525,575),overflow='none')
-    qcd_rho = tmp.sum(*[ax for ax in h.axes() if ax.name not in ['rho','pt','gruddt']])#.values(overflow='allnan')[()]
-    print(qcd_rho)
+    h = h.sum(*[ax for ax in h.axes() if ax.name not in ['rho','pt','gruddt']]).rebin('gruddt',2) #.values(overflow='allnan')[()]
+    for var,val in vars_cut.items():
+        #if var=='pt':
+        print('integrating ',var,val[0],val[1])
+        h = h.integrate(var,slice(val[0],val[1]))
+        #else: raise ValueError('only variable is pt')
+    print(h)
     qcd_gruddt = {}
     for i in range(len(_rhobins)):
        if i == len(_rhobins) - 1: continue
-       qcd_gruddt["[%.1f,%.1f]"%(_rhobins[i],_rhobins[i+1])] = qcd_rho.integrate('rho',slice(_rhobins[i],_rhobins[i+1]),overflow='none').values(overflow='none')[()]
-    print(qcd_gruddt)
-    gruaxis=qcd_rho.axis('gruddt').centers(overflow='none')
+       qcd_gruddt["%.1f_%.1f"%(_rhobins[i],_rhobins[i+1])] = h.integrate('rho',slice(_rhobins[i],_rhobins[i+1]),overflow='none').values(overflow='none')[()]
+
+    gruaxis=h.axis('gruddt').centers(overflow='none')
+
     fig,ax = plt.subplots()
+    ymaxh = 0.1
     for key, val in qcd_gruddt.items():
        val = val/np.sum(val)
-       plt.plot(gruaxis,val,label=key.replace('_','< rho <'))
 
+       #plot gruddt distribution  position on each rho curve
+       plt.plot(gruaxis,val,label=r"%s < $\rho$ < %s" % (key.split('_')[0], key.split('_')[1] ))
+       #plot 95th quantile position on each rho curve
+       quantiles = np.cumsum(val) 
+       plt.scatter(gruaxis[quantiles.searchsorted(0.95)], val[quantiles.searchsorted(0.95)], marker='.', c='black', s=100)
+       ymaxh+=0.1 
+    plt.xlabel('$GRU^{DDT}$')
+    plt.ylabel('distribution (a.u.)')
     plt.legend(loc='upper right')
 
     cmstext = plt.text(0., 1., "CMS",fontsize=20,horizontalalignment='left',verticalalignment='bottom',transform=ax.transAxes, fontweight='bold')
     addtext = plt.text(0.085, 1., "Simulation Preliminary",fontsize=16,horizontalalignment='left',verticalalignment='bottom',transform=ax.transAxes, style='italic')
-    #hep.cms.cmslabel(ax, data=False, paper=False, year='2017')
-    fig.savefig("solo_%s_%s_%s_lumi%i.pdf"%(sel,var_name,savename,lumifb))
+    addtext = plt.text(0.8, 1., "%i < $p_{T}$ < %i" % (vars_cut['pt'][0] , vars_cut['pt'][1]) ,fontsize=20,horizontalalignment='left',verticalalignment='bottom',transform=ax.transAxes)
+    fig.savefig("gruddt_%s.pdf"%(savename,))
 
 def getPlots(args):
-    print(args.lumi)
-    lumifb = float(args.lumi)
     tag = args.tag
     savename = args.savetag
 
@@ -84,41 +94,25 @@ def getPlots(args):
     for key, val in hists_unmapped.items():
         if isinstance(val, hist.Hist):
             hists_mapped[key] = processmap.apply(val)
-    # normalize to lumi
-    for h in hists_mapped.values():
-        h.scale({p: lumifb for p in h.identifiers('process')}, axis="process")
-    
-    print(hists_mapped)
     # properties
     hist_name = args.hist
-    var_name = args.var
-    var_label = r"$%s$"%args.varlabel
     vars_cut =  {}
-    #print(args.sel)
     if (len(args.sel)%3==0):
       for vi in range(int(len(args.sel)/3)):
         vars_cut[args.sel[vi*3]] = [float(args.sel[vi*3+1]), float(args.sel[vi*3+2])]
-    print(vars_cut)
     h = hists_mapped[hist_name]
-    #h = hists_unmapped[hist_name]
-    print('hi!',hists_unmapped[hist_name],hists_mapped[hist_name])
         
-    drawSolo(h,args.hist,var_name,var_label,args.title,lumifb,vars_cut,args.regions,savename)
+    drawSolo(h,args.hist,vars_cut,savename)
 
     os.chdir(pwd)
 
 if __name__ == "__main__":
-    #ex. python plot_solo.py --hists htt_test --tag test --var jet_pt --varlabel 'p_{T}(jet)' --title Test --lumi 41.5 --sel lep_pt 20. 200. --regions hadel_signal  --hist trigeff --savetag leppt_20
+    #python plot_ddt.py --hists ../condor/QCD_debug_6_v2/hists_sum_gru2 --tag QCD_debug_6_v2 --hist templates --sel pt 525 575 --savetag 'gruddt_distribution_525_575'
     parser = argparse.ArgumentParser()
     parser.add_argument('--hists',      dest='hists',    default="hists",      help="hists pickle name")
     parser.add_argument('--tag',        dest='tag',      default="",           help="tag")
     parser.add_argument('--savetag',    dest='savetag',  default="",           help="savetag")
-    parser.add_argument('--var',        dest='var',      default="",           help="var")
-    parser.add_argument('--varlabel',   dest='varlabel', default="",           help="varlabel")
-    parser.add_argument('--title',      dest='title',    default="",           help="title")
-    parser.add_argument('--lumi',       dest='lumi',     default=50.,          help="lumi",       type=float)
     parser.add_argument('--sel',        dest='sel',      default='',           help='selection',  nargs='+')
-    parser.add_argument('--regions',    dest='regions',  default='',           help='regionsel',  nargs='+')
     parser.add_argument('--hist',       dest='hist',     default='',           help='histname')
     args = parser.parse_args()
 

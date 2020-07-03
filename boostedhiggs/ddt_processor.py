@@ -36,6 +36,7 @@ class DDTProcessor(processor.ProcessorABC):
                 hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 525, 1500),
                 hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
                 hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
+                hist.Bin('jet_n2b1', r'Jet N_{2}}score', 100, 0., 0.5),
             ),
             'cutflow': hist.Hist(
                 'Events',
@@ -143,6 +144,7 @@ class DDTProcessor(processor.ProcessorABC):
                 jet_pt=normalize(candidatejet.pt, cut),
                 jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
                 jet_twoProngGru=normalize(candidatejet.twoProngGru, cut),
+                jet_n2b1=normalize(candidatejet.n2b1, cut),
             )
 
         for region in regions:

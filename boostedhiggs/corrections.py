@@ -4,7 +4,7 @@ import awkward as ak
 from coffea.util import load
 from coffea import hist, lookup_tools
 
-compiled = load(os.path.join(os.path.dirname(__file__), 'data', 'corrections_2.coffea'))
+compiled = load(os.path.join(os.path.dirname(__file__), 'data', 'corrections_3.coffea'))
 
 # hotfix some crazy large weights
 compiled['2017_pileupweight']._values = np.minimum(5, compiled['2017_pileupweight']._values)
@@ -38,7 +38,7 @@ def gruddt_shift(fatjets, year='2017'):
     fatjets_msdcorr = corrected_msoftdrop(fatjets)
     fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
 
-    return compiled[f'2017_gruddt_rho_pt'](fatjets_rhocorr, fatjets.pt)
+    return compiled[f'2017_gruddt_rho_pt'](fatjets.pt, fatjets_rhocorr)
 
 def n2ddt_shift(fatjets, year='2017'):
     return compiled[f'{year}_n2ddt_rho_pt'](fatjets.rho, fatjets.pt)

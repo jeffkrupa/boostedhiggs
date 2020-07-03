@@ -12,27 +12,19 @@ def run_processor(year,selsamples,starti,endi,outname):
     p = DDTProcessor(year=year)
     
     files = {}
-    
-    with open('../data/fileset2017.json', 'r') as f:
+
+    with open('../data/fileset2017VJets.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
-    
+    with open('../data/fileset2017ULhadd.json', 'r') as f:
+        newfiles = json.load(f)
+        files.update(newfiles)
     
     
     selfiles = {k: files[k][starti:endi] for k in selsamples}
     
     args = {'nano': True, 'workers': 1, 'savemetrics': True}
     out, metrics = processor.run_uproot_job(selfiles, 'Events', p, processor.iterative_executor, args)
-    
-    #xs = {}
-    #with open('../data/xsec.json', 'r') as f:
-    #    xs = json.load(f)
-    
-    #scale1fb = {k: xs[k] * 1000 / w for k, w in out['sumw'].items()}
-    #out['jet_kin'].scale(scale1fb, 'dataset')
-    #out['lep_kin'].scale(scale1fb, 'dataset')
-    #out['mass_kin'].scale(scale1fb, 'dataset')
-    #out['evt_kin'].scale(scale1fb, 'dataset')
     
     util.save(out, '%s.coffea'%outname)
 

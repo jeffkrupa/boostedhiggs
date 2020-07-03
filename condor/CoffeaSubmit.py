@@ -27,11 +27,11 @@ logdir = label
 outdir = '/store/user/jkrupa/coffea/'+logdir+'/'
 
 samplelist = {
-    'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-    'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+    'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd': '2017',
+    'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd': '2017',
+    'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd': '2017',
+    'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd': '2017',
+    'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd': '2017',
     #'VectorZPrimeToQQ_M100_pT300_TuneCP5_madgraph_pythia8_13TeV': '2017',
     #'WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
     #'WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
@@ -39,7 +39,9 @@ samplelist = {
     #'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
     #'ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
     #'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-  
+    #'JetHT': '2017',
+    #'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8-hadd':'2017',
+    #'WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8-hadd':'2017',   
 }
 
 #################################################
@@ -75,10 +77,14 @@ os.system('mkdir -p /eos/uscms'+outdir)
 totfiles = {}
 
 
-with open('../data/fileset2017.json', 'r') as f:
+with open('../data/fileset2017VJets.json', 'r') as f:
     newfiles = json.load(f)
     totfiles.update(newfiles)
-print('hi')
+
+with open('../data/fileset2017ULhadd.json', 'r') as f:
+    newfiles = json.load(f)
+    totfiles.update(newfiles)
+
 for sample in samplelist:
     totfiles[sample] = len(totfiles[sample])
 
@@ -88,6 +94,9 @@ for sample in samplelist:
 
     prefix = sample
     print('Submitting '+prefix)
+
+    if 'JetHT' in sample: files_per_job=1
+    if 'QCD' in sample: files_per_job=3
 
     njobs = int(totfiles[sample]/files_per_job)+1
     remainder = totfiles[sample]-int(files_per_job*(njobs-1))

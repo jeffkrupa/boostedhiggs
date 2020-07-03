@@ -4,23 +4,10 @@ import os
 
 
 skip =  [
-'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_49',
-'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_52',
-'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_55',
-'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_11',
-'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_7',
-'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_9',
-'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_10',
-'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_78',
-'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_11',
+'JetHT'
 ]
 eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
-#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3"
-#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_2"
-#indir ="QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_3_rhocorrfix"
-#indir = "QCD_VJets_VDJM100_QCDdebug5_nosmooth_3_grubinwidth0p01_3_rhocorrfix_2"
-#indir = "gru_4"
-indir = "QCD_VJets_VDJM100_QCDdebug6_nosmooth"
+indir = "fullsample_v2"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 10
@@ -37,8 +24,12 @@ for name in onlyfiles:
   #if 'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_3' in name or 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_4' in name or 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_5' in name: continue
   #if 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_4' in name: continue
   #if 'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_2' in name: continue
+  #if 'JetHT' in name: continue
+  if 'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8-hadd_0' in name: continue
+  if 'TT' in name: continue
+  if 'LNu' in name: continue
   names.append("%s%s/%s.coffea" % (eosdir,indir,name))
-
+ 
 print(len(names))
 os.system('ls %s%s/ | wc -l'%(eosdir,indir))
 
@@ -86,8 +77,10 @@ with open('../data/xsec.json', 'r') as f:
 
 #flist[0]['templates']   
 scale1fb = {k: xs[k] * 1000 / w for k, w in flist[0]['sumw'].items()}
+
 print(scale1fb)
 flist[0]['templates'].scale(scale1fb, 'dataset')
+#flist[0]['templates'].scale({k:0.63 for k,_ in flist[0]['sumw'].items() if 'QCD' in k}, 'dataset')
 print('hists', flist[0]) 
 util.save(flist[0],'%s/hists_sum_gru2.coffea' % (indir))
 for i,x in enumerate(chunk_names):

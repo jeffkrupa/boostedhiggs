@@ -9,16 +9,13 @@ from boostedhiggs.ddt_processor import DDTProcessor
 import argparse
 import scipy.ndimage as sc
 import matplotlib.pyplot as plt
+from collections import defaultdict, OrderedDict
 
 DISCRIMINATOR = "jet_twoProngGru"
 HISTNAME = "jet_kin"
 
 def plot(template, name):
     plt.clf()
-
-    #z = list(template._sumw.values())[0]
-    
-    #print(np.amin(z[z>0]), np.amax(z))   
 
     ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.75, "vmax":0.99})#,xoverflow='all',yoverflow='all')
     cmstext = plt.text(0., 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
@@ -33,73 +30,45 @@ def plot(template, name):
 def build_ddt_map(coffeafile, percentile, postfix):
 
     # adapted from https://github.com/SangeonPark/coffeandbacon/blob/master/analysis/DDT_Map_Derivation.ipynb
+
     hists = load(coffeafile)
-    histo = hists[HISTNAME].sum('dataset','region',overflow='all') #hist of pt, rho, gru scores
+    print('imported coffea file:', hists.items())
 
-    print(hists[HISTNAME].sum('dataset','region',overflow='all').values(overflow='all')[()].shape)
-    print(hists[HISTNAME].sum('dataset','region',overflow='all').values(overflow='none')[()].shape)
-    
-    print(hists[HISTNAME].sum('dataset','region',overflow='none').values(overflow='all')[()].shape)
-    print(hists[HISTNAME].sum('dataset','region',overflow='none').values(overflow='none')[()].shape)
-    val_QCD = histo.values(overflow='none')[()]
-    print(val_QCD.shape)
-    #print(val_QCD[0])
-    #print('val_QCD shape', val_QCD.shape)
-    #print(histo.axis('jet_pt').edges())
-    #val_QCD = val_QCD[()] 
+    #load GRU distribution in each rho, pt bin
+    histo = hists[HISTNAME].sum('dataset','region')
+    val_QCD = histo.values(overflow='allnan')[()]
 
-    #sum hists and normalize
+    #make CDF 
     qcd_maxval_temp = np.cumsum(val_QCD, axis=2)
     qcd_maxval = qcd_maxval_temp[:,:,-1]
     norma = qcd_maxval_temp / np.maximum(1e-10,qcd_maxval[:,:,np.newaxis])
-    #print(norma)
-    #print(norma.shape)
-    hist_y_QCD = histo
-    template = histo.sum(DISCRIMINATOR)#,overflow='all') #pt, rho base
-    print(template.values(overflow='none')[()])  
-    print(template.values(overflow='none')[()].shape)  
-    #print(len(histo.axis('jet_pt').edges()))
-    #print(template.axis('jet_pt').edges())
-    #print(template.axis('jet_pt').edges(overflow='allnan'))
+
+    #make pt, rho base
+    hist_y_QCD = hists[HISTNAME].sum('dataset','region')
+    template = hist_y_QCD.sum(DISCRIMINATOR,) #pt, rho base
     hist_y_QCD.clear()
-    raw_cut = hist_y_QCD.sum(DISCRIMINATOR)
     hist_y_QCD._sumw = {():norma}
 
-
+    #make an array of X percentile of GRU in (rho, pt) bin
     res = np.apply_along_axis(lambda norma: norma.searchsorted(args.percentile), axis = 2, arr = norma)
-    res[res>=100]=0
-    #print(res[:,:].shape)
-    #print(res)
-    #print('shape',hist_y_QCD.values(overflow='allnan')[()].shape)
-    #print(hist_y_QCD.values()[()])
+    res[res>100]=0
+
+    #evaluation of GRU cut from quantile (trivial if GRU has 100 bins)
     def bineval(a):
-        return hist_y_QCD.identifiers(DISCRIMINATOR)[a].lo
+        return hist_y_QCD.identifiers(DISCRIMINATOR,overflow='allnan')[a].lo
 
     binfunc = np.vectorize(bineval)
-
+    
     qmap = binfunc(res)
-  
-    #print(histo.axis('jet_pt').edges)
-    histo1 = histo.integrate('jet_pt',slice(525,575))
-    #print(histo1)
-    print(qmap)
-    print(qmap.shape)
+
     template.clear()
     template._sumw = {():qmap}
     template.label = 'GRU cut at ' + str(int(100*percentile)) + '%'
-    #print(template.values(overflow='all'))
-    #print(template.values(overflow='all')[()].shape)
-    save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
 
-    #plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
-    '''
-    #print(template)
-    template.scale(-1.)
-    print(raw_cut._sumw)
-    print(template._sumw)
-    flat_cut = raw_cut.add(template)
-    template.scale(-1.)
-    '''
+    save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
+    plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
+
+    #smoothing
     smooth_qmap = sc.filters.gaussian_filter(qmap,1)
 
     template.clear()
@@ -108,7 +77,7 @@ def build_ddt_map(coffeafile, percentile, postfix):
     values_nonan = template.values()[()]
 
     save(template, '../boostedhiggs/ddtmap_smooth_%s.coffea'%postfix) 
-    #plot(template, 'ddt_%i_smoothed_%s'%(int(100*percentile), postfix))
+    plot(template, 'ddt_%i_smoothed_%s'%(int(100*percentile), postfix))
     '''
     import ROOT
     outfile = ROOT.TFile("plots/n2ddtmap_2018bits_GaussianSmoothing1Sigma_CorrectVersion.root","recreate")
@@ -127,4 +96,6 @@ if __name__ == "__main__":
     parser.add_argument('--percentile',       dest='percentile',       	default='.',       help="QCD efficiency",              type=float)
     parser.add_argument('--postfix',          dest='postfix',       	default='',        help="file name",                   type=str)
     args = parser.parse_args()
+
+
     build_ddt_map(args.coffeafile, args.percentile, args.postfix)
