@@ -33,10 +33,12 @@ class DDTProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 525, 1500),
-                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
-                hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
-                hist.Bin('jet_n2b1', r'Jet N_{2}}score', 100, 0., 0.5),
+                #hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 525, 1500),
+                #hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
+                hist.Bin('jet_mass', r'Jet $m_{SD}$', 41, 40, 350),
+                hist.Bin('jet_in_v3', 'IN  value', 100, 0.0, 1.0),
+                #hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
+                #hist.Bin('jet_n2b1', r'Jet N_{2}}score', 100, 0., 0.5),
             ),
             'cutflow': hist.Hist(
                 'Events',
@@ -51,6 +53,7 @@ class DDTProcessor(processor.ProcessorABC):
         return self._accumulator
 
     def process(self, events):
+        if(len(events) == 0): return output
 
         dataset = events.metadata['dataset']
         isRealData = False
@@ -67,16 +70,18 @@ class DDTProcessor(processor.ProcessorABC):
         selection.add('fatjet_trigger', trigger_fatjet)
 
         # run model on PFCands associated to FatJet (FatJetPFCands)
-        events.FatJet.array.content["PFCands"] = type(events.FatJetPFCands.array).fromcounts(events.FatJet.nPFConstituents.flatten(), events.FatJetPFCands.flatten())
-        events.FatJet.array.content["twoProngGru"] = run_model(events.FatJet.flatten())
-
+        #events.FatJet.array.content["PFCands"] = type(events.FatJetPFCands.array).fromcounts(events.FatJet.nPFConstituents.flatten(), events.FatJetPFCands.flatten())
+        #events.FatJet.array.content["twoProngGru"] = run_model(events.FatJet.flatten())
 
         fatjets = events.FatJet
+        IN  = events.IN
+
         fatjets['msdcorr'] = corrected_msoftdrop(fatjets)
         fatjets['rhocorr'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
+        fatjets['in_v3'] = IN.v3
         candidatejet = fatjets[
             # https://github.com/DAZSLE/BaconAnalyzer/blob/master/Analyzer/src/VJetLoader.cc#L269
-            (fatjets.pt > 250)
+            (fatjets.pt > 525)
             & (abs(fatjets.eta) < 2.5)
             # & fatjets.isLoose  # not always available
             & (fatjets.rhocorr >= -5.5)
@@ -141,10 +146,11 @@ class DDTProcessor(processor.ProcessorABC):
             output['jet_kin'].fill(
                 dataset=dataset,
                 region=region,
-                jet_pt=normalize(candidatejet.pt, cut),
-                jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
-                jet_twoProngGru=normalize(candidatejet.twoProngGru, cut),
-                jet_n2b1=normalize(candidatejet.n2b1, cut),
+                #jet_pt=normalize(candidatejet.pt, cut),
+                jet_mass=normalize(candidatejet.msdcorr, cut),
+                #jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
+                jet_in_v3=normalize(candidatejet.in_v3, cut),
+                #jet_n2b1=normalize(candidatejet.n2b1, cut),
             )
 
         for region in regions:

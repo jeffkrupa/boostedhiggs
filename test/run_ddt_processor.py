@@ -13,10 +13,13 @@ def run_processor(year,selsamples,starti,endi,outname):
     
     files = {}
 
-    with open('../data/fileset2017VJets.json', 'r') as f:
-        newfiles = json.load(f)
-        files.update(newfiles)
-    with open('../data/fileset2017ULhadd.json', 'r') as f:
+    #with open('../data/fileset2017VJets.json', 'r') as f:
+    #    newfiles = json.load(f)
+    #    files.update(newfiles)
+    #with open('../data/fileset2017ULhadd.json', 'r') as f:
+    #    newfiles = json.load(f)
+    #    files.update(newfiles)
+    with open('../data/fileset2017.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
     

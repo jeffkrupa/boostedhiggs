@@ -4,7 +4,7 @@ import awkward as ak
 from coffea.util import load
 from coffea import hist, lookup_tools
 
-compiled = load(os.path.join(os.path.dirname(__file__), 'data', 'corrections_3.coffea'))
+compiled = load(os.path.join(os.path.dirname(__file__), 'data', 'corrections_4.coffea'))
 
 # hotfix some crazy large weights
 compiled['2017_pileupweight']._values = np.minimum(5, compiled['2017_pileupweight']._values)
@@ -33,6 +33,17 @@ def corrected_msoftdrop(fatjets):
         dazsle_msd = (fatjets.subjets * (1 - fatjets.subjets.rawFactor)).sum().mass
     return dazsle_msd * ak.JaggedArray.fromoffsets(fatjets.array.offsets, sf_flat)
 
+def shift(fatjets, algo, year='2017'):
+    fatjets_msdcorr = corrected_msoftdrop(fatjets)
+    fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
+
+    return compiled['%s_%s_rho_pt'%(year,algo)](fatjets.pt, fatjets_rhocorr)
+
+def inddt_shift(fatjets, year='2017'):
+    fatjets_msdcorr = corrected_msoftdrop(fatjets)
+    fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
+
+    return compiled[f'2017_gruddt_rho_pt'](fatjets.pt, fatjets_rhocorr)
 
 def gruddt_shift(fatjets, year='2017'):
     fatjets_msdcorr = corrected_msoftdrop(fatjets)
@@ -41,7 +52,9 @@ def gruddt_shift(fatjets, year='2017'):
     return compiled[f'2017_gruddt_rho_pt'](fatjets.pt, fatjets_rhocorr)
 
 def n2ddt_shift(fatjets, year='2017'):
-    return compiled[f'{year}_n2ddt_rho_pt'](fatjets.rho, fatjets.pt)
+    fatjets_msdcorr = corrected_msoftdrop(fatjets)
+    fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
+    return compiled[f'{year}_n2b1_rho_pt'](fatjets.pt, fatjets_rhocorr)
 
 
 def add_pileup_weight(weights, nPU, year='2017', dataset=None):

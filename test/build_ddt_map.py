@@ -11,18 +11,19 @@ import scipy.ndimage as sc
 import matplotlib.pyplot as plt
 from collections import defaultdict, OrderedDict
 
-DISCRIMINATOR = "jet_twoProngGru"
+DISCRIMINATOR = "jet_in_v3"
 HISTNAME = "jet_kin"
 
 def plot(template, name):
     plt.clf()
 
-    ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.75, "vmax":0.99})#,xoverflow='all',yoverflow='all')
-    cmstext = plt.text(0., 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
+    #ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.5, "vmax":0.99})#,xoverflow='all',yoverflow='all')
+    ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.5, "vmax":1.})#,xoverflow='all',yoverflow='all')
+    cmstext = plt.text(0.0, 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
     addtext = plt.text(0.11, 1., "Simulation Preliminary",fontsize=10,horizontalalignment='left',verticalalignment='bottom', style='italic', transform=ax.transAxes)
 
-    plt.ylim(500,1200)
-    plt.xlim(-5,-2)
+    plt.ylim(525,1500)
+    plt.xlim(-5.5,-2)
     plt.savefig('plots/'+name+'.pdf')
     plt.savefig('plots/'+name+'.png')
  
@@ -63,8 +64,9 @@ def build_ddt_map(coffeafile, percentile, postfix):
 
     template.clear()
     template._sumw = {():qmap}
-    template.label = 'GRU cut at ' + str(int(100*percentile)) + '%'
+    template.label = 'IN cut at ' + str(int(100*percentile)) + '%'
 
+    print(template.values()[()])
     save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
     plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
 
@@ -73,7 +75,7 @@ def build_ddt_map(coffeafile, percentile, postfix):
 
     template.clear()
     template._sumw = {():smooth_qmap}
-    template.label = 'GRU cut at ' + str(100*percentile) + '% (smoothed)'
+    template.label = 'IN cut at ' + str(100*percentile) + '% (smoothed)'
     values_nonan = template.values()[()]
 
     save(template, '../boostedhiggs/ddtmap_smooth_%s.coffea'%postfix) 

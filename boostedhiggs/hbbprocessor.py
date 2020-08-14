@@ -1,18 +1,18 @@
 import logging
 import numpy as np
 from coffea import processor, hist
-from .common import (
+from boostedhiggs.common import (
     getBosons,
     matchedBosonFlavor,
 )
-from .corrections import (
+from boostedhiggs.corrections import (
     corrected_msoftdrop,
     n2ddt_shift,
     add_pileup_weight,
     add_VJets_NLOkFactor,
     add_jetTriggerWeight,
 )
-from .btag import BTagEfficiency, BTagCorrector
+from boostedhiggs.btag import BTagEfficiency, BTagCorrector
 
 # for old pancakes
 from coffea.nanoaod.methods import collection_methods, FatJet
@@ -42,7 +42,7 @@ class HbbProcessor(processor.ProcessorABC):
             ],
             '2017': [
                 'Mu50',
-                'TkMu50',
+            #    'TkMu50',
             ],
             '2018': [
                 'Mu50',  # TODO: check
@@ -61,11 +61,11 @@ class HbbProcessor(processor.ProcessorABC):
                 'PFJet450',
             ],
             '2017': [
-                'AK8PFJet330_PFAK8BTagCSV_p17',
+                #'AK8PFJet330_PFAK8BTagCSV_p17',
                 'PFHT1050',
-                'AK8PFJet400_TrimMass30',
-                'AK8PFJet420_TrimMass30',
-                'AK8PFHT800_TrimMass50',
+                #'AK8PFJet400_TrimMass30',
+                #'AK8PFJet420_TrimMass30',
+                #'AK8PFHT800_TrimMass50',
                 'PFJet500',
                 'AK8PFJet500',
             ],
@@ -102,11 +102,12 @@ class HbbProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Cat('systematic', 'Systematic'),
-                hist.Bin('genflavor', 'Gen. jet flavor', [0, 1, 2, 3, 4]),
-                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [450, 500, 550, 600, 675, 800, 1200]),
-                hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 201),
-                hist.Bin('ddb', r'Jet ddb score', [0, 0.89, 1]),
+                #hist.Cat('systematic', 'Systematic'),
+                #hist.Bin('genflavor', 'Gen. jet flavor', [0, 1, 2, 3, 4]),
+                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 25,500,1000),# + np.array([800,1000,1500])),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
+                #hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 201),
+                #hist.Bin('ddb', r'Jet ddb score', [0, 0.89, 1]),
             ),
             'genresponse_noweight': hist.Hist(
                 'Events',
@@ -249,19 +250,19 @@ class HbbProcessor(processor.ProcessorABC):
         msd_matched = candidatejet.msdcorr * self._msdSF[self._year] * (genflavor > 0) + candidatejet.msdcorr * (genflavor == 0)
 
         regions = {
-            'signal': ['trigger', 'minjetkin', 'jetacceptance', 'jetid', 'n2ddt', 'antiak4btagMediumOppHem', 'met', 'noleptons'],
-            'muoncontrol': ['muontrigger', 'minjetkin', 'jetacceptance', 'jetid', 'n2ddt', 'ak4btagMedium08', 'onemuon', 'muonkin', 'muonDphiAK8'],
+            'signal': ['trigger','minjetkin','noleptons','jetacceptance', 'noleptons','jetid',],#'jetid', 'noleptons',],# 'n2ddt','antiak4btagMediumOppHem'],#, 'met',],
+            'muoncontrol': ['muontrigger','minjetkin', 'jetacceptance', 'jetid', 'ak4btagMedium08', 'onemuon', 'muonkin', 'muonDphiAK8'],
             'noselection': [],
         }
 
         for region, cuts in regions.items():
             allcuts = set()
             logger.debug(f"Filling cutflow with: {dataset}, {region}, {genflavor}, {weights.weight()}")
-            output['cutflow'].fill(dataset=dataset, region=region, genflavor=genflavor, cut=0, weight=weights.weight())
-            for i, cut in enumerate(cuts + ['ddbpass']):
-                allcuts.add(cut)
-                cut = selection.all(*allcuts)
-                output['cutflow'].fill(dataset=dataset, region=region, genflavor=genflavor[cut], cut=i + 1, weight=weights.weight()[cut])
+            #output['cutflow'].fill(dataset=dataset, region=region, genflavor=genflavor, cut=0, weight=weights.weight())
+            #for i, cut in enumerate(cuts + ['ddbpass']):
+            #    allcuts.add(cut)
+            #    cut = selection.all(*allcuts)
+            #    output['cutflow'].fill(dataset=dataset, region=region, genflavor=genflavor[cut], cut=i + 1, weight=weights.weight()[cut])
 
         systematics = [
             None,
@@ -276,7 +277,7 @@ class HbbProcessor(processor.ProcessorABC):
         def normalize(val, cut):
             return val[cut].pad(1, clip=True).fillna(0).flatten()
 
-        def fill(region, systematic, wmod=None):
+        def fill(region, systematic=None, wmod=None):
             selections = regions[region]
             cut = selection.all(*selections)
             sname = 'nominal' if systematic is None else systematic
@@ -288,11 +289,11 @@ class HbbProcessor(processor.ProcessorABC):
             output['templates'].fill(
                 dataset=dataset,
                 region=region,
-                systematic=sname,
-                genflavor=genflavor[cut],
+                #systematic=sname,
+                #genflavor=genflavor[cut],
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(msd_matched, cut),
-                ddb=normalize(candidatejet.btagDDBvL, cut),
+                #ddb=normalize(candidatejet.btagDDBvL, cut),
                 weight=weight,
             )
             if wmod is not None:
@@ -321,8 +322,8 @@ class HbbProcessor(processor.ProcessorABC):
                 n2ddt=normalize(candidatejet.n2ddt, cut),
                 weight=weights.weight()[cut],
             )
-            for systematic in systematics:
-                fill(region, systematic)
+            #for systematic in systematics:
+            fill(region)#, systematic)
             if 'GluGluHToBB' in dataset:
                 for i in range(9):
                     fill(region, 'LHEScale_%d' % i, events.LHEScaleWeight[:, i])
