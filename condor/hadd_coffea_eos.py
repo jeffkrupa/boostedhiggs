@@ -4,10 +4,10 @@ import os
 
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
-indir = "6Aug20_5"
+indir = "6Aug20_debugQCDmuonCR_2"
 os.system("mkdir -p %s" % indir)
 
-chunk_size = 40
+chunk_size = 10
 
 from os import listdir
 from os.path import isfile, join
@@ -40,7 +40,7 @@ for i in range(0,len(names),chunk_size):
         flist[0][key] = flist[0][key] + flist[fi][key]
   
   print(flist[0])
-  #flist[0]['templates'] = flist[0]['templates'].sum('nPFConstituents',overflow='allnan')  
+  flist[0]['templates'] = flist[0]['templates'].sum('msd',overflow='allnan')  
   util.save(flist[0],'%s/hists_sum_%i.coffea' % (indir,i))
 
   for f in flist:

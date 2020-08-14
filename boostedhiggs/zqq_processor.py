@@ -54,15 +54,17 @@ class ZQQProcessor(processor.ProcessorABC):
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
                 #hist.Cat('systematic', 'Systematic'),
-                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 25,500,1000),# + np.array([800,1000,1500])),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [525,575,625,700,800,1500]),#np.arange(525,2000,50)),
                 hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
                 #hist.Bin('gru', 'GRU value',20,0.,1.),
-                hist.Bin('gruddt', 'GRU$^{DDT}$ value',21,-1.,0.5),
+                hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-1,0,1]),
                 #hist.Bin('rho', 'jet rho', 20,-5.5,-2.),#[-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.]),
                 #hist.Bin('n2', 'N$_2$ value', 20, 0., 0.5),
                 #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', 21, -0.3, 0.3),
-                hist.Bin('Vmatch', 'Matched to V', 2, 0, 1),
-                hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', 21, -1., 0.5),
+                hist.Bin('Vmatch', 'Matched to V', [-1,0,1]),
+                hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', [-1,0,1]),
+                hist.Bin('mu_pt', 'Leading muon p_{T}', 20,50., 700.),
+                hist.Bin('mu_pfRelIso04_all', 'Muon pfRelIso04 isolation', 20,0.,1.),
                 #hist.Bin('nPFConstituents', 'Number of PF candidates',41,20,60),
                 #hist.Bin('nJet', 'Number of fat jets', 10,0,9), 
             ),
@@ -163,9 +165,11 @@ class ZQQProcessor(processor.ProcessorABC):
         goodmuon = (
             (events.Muon.pt > 10)
             & (abs(events.Muon.eta) < 2.1)
-            & (events.Muon.pfRelIso04_all < 0.4)
+            #& (events.Muon.pfRelIso04_all < 0.4)
             & (events.Muon.looseId).astype(bool)
         )
+        nmuons = goodmuon.sum()
+
         leadingmuon = events.Muon[goodmuon][:, 0:1]
         muon_ak8_pair = leadingmuon.cross(candidatejet, nested=True)
 
@@ -179,26 +183,13 @@ class ZQQProcessor(processor.ProcessorABC):
             & (leadingmuon.looseId).astype(bool)
         ).all())
 
+        #ak4 puppi jet for CR
         jets = events.Jet[
             (events.Jet.pt > 50.)
             & (abs(events.Jet.eta) < 3)
             & (events.Jet.isTight).astype(bool)
         ]
-        '''
-        jets = events.Jet[
-            (events.Jet.pt > 30.)
-            & (abs(events.Jet.eta) < 2.5)
-            & events.Jet.isTight
-        ]
-        # only consider first 4 jets to be consistent with old framework
-        jets = jets[:, :4]
-        ak4_ak8_pair = jets.cross(candidatejet, nested=True)
-        dphi = abs(ak4_ak8_pair.i0.delta_phi(ak4_ak8_pair.i1))
-        ak4_opposite = jets[(dphi > np.pi / 2).all()]
-        selection.add('antiak4btagMediumOppHem', ak4_opposite.btagDeepB.max() < BTagEfficiency.btagWPs[self._year]['medium'])
-        ak4_away = jets[(dphi > 0.8).all()]
-        selection.add('ak4btagMedium08', ak4_away.btagDeepB.max() > BTagEfficiency.btagWPs[self._year]['medium'])
-        '''
+
         # only consider first 4 jets to be consistent with old framework
         jets = jets[:, :4]
         ak4_ak8_pair = jets.cross(candidatejet, nested=True)
@@ -208,12 +199,6 @@ class ZQQProcessor(processor.ProcessorABC):
         selection.add('ak4btagMedium08', ak4_away.btagCSVV2.max() > 0.8838)
 
         #generic lep veto
-        nmuons = (
-            (events.Muon.pt > 10.)
-            & (abs(events.Muon.eta) < 2.4)
-            & (events.Muon.pfRelIso04_all < 0.25)
-            & (events.Muon.looseId).astype(bool)
-        ).sum()
 
         nelectrons = (
             (events.Electron.pt > 10.)
@@ -233,11 +218,11 @@ class ZQQProcessor(processor.ProcessorABC):
         if not isRealData: 
             weights.add('genweight', events.genWeight)
             add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
-            add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
+            #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year) signal region only
             bosons = getBosons(events)
             genBosonPt = bosons.pt.pad(1, clip=True).fillna(0)
             add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
-
+            #b-tag weights
         regions = {
            'signal'                 : ['fatjet_trigger','minjetkin','noleptons','jetid','genmatch'],
            'ttbar_muoncontrol'      : ['muon_trigger', 'minjetkin', 'jetid', 'muonDphiAK8','muonkin','ak4btagMedium08','onemuon',],
@@ -274,6 +259,8 @@ class ZQQProcessor(processor.ProcessorABC):
                 #nPFConstituents=normalize(candidatejet.nPFConstituents, cut),
                 #nJet=candidatejet.counts[cut],
                 Vmatch=normalize(candidatejet.genMatchFull, cut),
+                mu_pt=normalize(leadingmuon.pt, cut),
+                mu_pfRelIso04_all=normalize(leadingmuon.pfRelIso04_all, cut),
                 weight=weight,
             )
 
