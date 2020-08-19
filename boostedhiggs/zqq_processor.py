@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 import numpy as np
 from coffea import processor, hist
 from boostedhiggs.twoProngGRU import *
@@ -54,15 +55,15 @@ class ZQQProcessor(processor.ProcessorABC):
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
                 #hist.Cat('systematic', 'Systematic'),
-                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', [525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 25,500,1000),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
                 hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
                 #hist.Bin('gru', 'GRU value',20,0.,1.),
-                hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-1,0,1]),
+                #hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-1,0,1]),
                 #hist.Bin('rho', 'jet rho', 20,-5.5,-2.),#[-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.]),
                 #hist.Bin('n2', 'N$_2$ value', 20, 0., 0.5),
                 #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', 21, -0.3, 0.3),
-                hist.Bin('Vmatch', 'Matched to V', [-1,0,1]),
-                hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', [-1,0,1]),
+                #hist.Bin('Vmatch', 'Matched to V', [-1,0,1]),
+                hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', 20, -1, 0.5),
                 hist.Bin('mu_pt', 'Leading muon p_{T}', 20,50., 700.),
                 hist.Bin('mu_pfRelIso04_all', 'Muon pfRelIso04 isolation', 20,0.,1.),
                 #hist.Bin('nPFConstituents', 'Number of PF candidates',41,20,60),
@@ -71,12 +72,15 @@ class ZQQProcessor(processor.ProcessorABC):
             #'gruddt' : hist.Hist(
             #    hist.Cat('dataset', 'Dataset'),
             #    hist.Cat('region', 'Region'),
-            'cutflow': hist.Hist(
-                'Events',
-                hist.Cat('dataset', 'Dataset'),
-                hist.Cat('region', 'Region'),
-                hist.Bin('cut', 'Cut index', 11, 0, 11),
-            ),
+            #'cutflow': hist.Hist(
+            #    'Events',
+            #    hist.Cat('dataset', 'Dataset'),
+            #    hist.Cat('region', 'Region'),
+            #    hist.Bin('cut', 'Cut index', 11, 0, 11),
+            #),
+            'cutflow_signal' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
+            'cutflow_ttbar_muoncontrol' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
+
         })
     @property
     def accumulator(self):
@@ -143,11 +147,17 @@ class ZQQProcessor(processor.ProcessorABC):
 
         # basic jet selection
         selection.add('minjetkin', ( 
-            (candidatejet.pt >= 525)
+            (candidatejet.pt >= 450)
+            #& (candidatejet.msdcorr >= 40.)
             & (abs(candidatejet.eta) < 2.5)
             & (candidatejet.rhocorr >= -5.5)
             & (candidatejet.rhocorr <= -2)
         ).any())
+        selection.add('signal_pt', (
+            (candidatejet.pt >= 525)
+        ).any())
+
+        selection.add('mass', (candidatejet.msdcorr >= 40.).any())
         selection.add('v_selection_jetkin', ( 
             (candidatejet.pt >= 200)
             & (candidatejet.rhocorr >= -5.5)
@@ -166,21 +176,26 @@ class ZQQProcessor(processor.ProcessorABC):
             (events.Muon.pt > 10)
             & (abs(events.Muon.eta) < 2.1)
             #& (events.Muon.pfRelIso04_all < 0.4)
-            & (events.Muon.looseId).astype(bool)
+            #& (events.Muon.looseId).astype(bool)
         )
-        nmuons = goodmuon.sum()
-
-        leadingmuon = events.Muon[goodmuon][:, 0:1]
+        nmuons=goodmuon.sum()
+        leadingmuon = events.Muon[goodmuon 
+        #& (events.Muon.pt > 55)
+        ][:, 0:1]
         muon_ak8_pair = leadingmuon.cross(candidatejet, nested=True)
+ 
+        ngoodmuons = goodmuon[events.Muon.pt > 55].sum()
 
         selection.add('muonDphiAK8', (
             abs(muon_ak8_pair.i0.delta_phi(muon_ak8_pair.i1)) > 2*np.pi/3
         ).all().all())
 
+        
+
         selection.add('muonkin', (
             (leadingmuon.pt > 55.)
             & (abs(leadingmuon.eta) < 2.1)
-            & (leadingmuon.looseId).astype(bool)
+            #& (leadingmuon.looseId).astype(bool)
         ).all())
 
         #ak4 puppi jet for CR
@@ -211,32 +226,49 @@ class ZQQProcessor(processor.ProcessorABC):
             & (events.Tau.idDecayMode).astype(bool)
             # bacon iso looser than Nano selection
         ).sum()
-        selection.add('onemuon', (nmuons == 1) & (nelectrons == 0) & (ntaus == 0))
+        selection.add('onemuon', (ngoodmuons==1)& (nelectrons == 0) & (ntaus == 0))
         selection.add('noleptons', (nmuons == 0) & (nelectrons == 0) & (ntaus == 0))
         selection.add('noelectron_notau', (nelectrons == 0) & (ntaus == 0))
      
         if not isRealData: 
             weights.add('genweight', events.genWeight)
-            add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
+            #add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
             #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year) signal region only
             bosons = getBosons(events)
             genBosonPt = bosons.pt.pad(1, clip=True).fillna(0)
             add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
             #b-tag weights
         regions = {
-           'signal'                 : ['fatjet_trigger','minjetkin','noleptons','jetid','genmatch'],
-           'ttbar_muoncontrol'      : ['muon_trigger', 'minjetkin', 'jetid', 'muonDphiAK8','muonkin','ak4btagMedium08','onemuon',],
-           #'vselection_muoncontrol' : ['muon_trigger', 'v_selection_jetkin', 'genmatch', 'jetid', 'ak4btagMedium08', 'muonkin','met'],
+           'signal'                 : ['fatjet_trigger','minjetkin','signal_pt','mass','noleptons','jetid','genmatch'],
+           'ttbar_muoncontrol'      : ['muon_trigger', 'minjetkin','jetid', 'mass', 'muonDphiAK8','muonkin','ak4btagMedium08','onemuon',],
+           'noselection' : [],#'vselection_muoncontrol' : ['muon_trigger', 'v_selection_jetkin', 'genmatch', 'jetid', 'ak4btagMedium08', 'muonkin','met'],
         }
         #if isRealData and 'SingleMuon' not in dataset:
         #    regions['signal'].append('blinding')
-        for region, cuts in regions.items():
-            allcuts = set()  
-            output['cutflow'].fill(dataset=dataset, region=region, cut=0,)#weight=weights.weight())
+        '''for region, cuts in regions.items():
+            allcuts = set() 
+            print ('weights', weights.weight().shape)
+            print( len(events)) 
+            output['cutflow'].fill(dataset=dataset, region=region, cut=0)#,weight=weights.weight())
+            
             for i, cut in enumerate(cuts):
+                 
                 allcuts.add(cut)
                 cut = selection.all(*allcuts)
                 output['cutflow'].fill(dataset=dataset, region=region, cut=i + 1)# weight=weights.weight()[cut])
+        '''
+        allcuts_signal = set()
+        output['cutflow_signal'][dataset]['none']+= float(weights.weight().sum())
+        allcuts_ttbar_muoncontrol = set()
+        output['cutflow_ttbar_muoncontrol'][dataset]['none']+= float(weights.weight().sum())
+  
+        for cut in regions['signal']:
+            allcuts_signal.add(cut)
+            output['cutflow_signal'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_signal)].sum())
+
+        for cut in regions['ttbar_muoncontrol']:
+            allcuts_ttbar_muoncontrol.add(cut)
+            output['cutflow_ttbar_muoncontrol'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_ttbar_muoncontrol)].sum())
 
         def normalize(val, cut):
             return val[cut].pad(1, clip=True).fillna(0).flatten()
@@ -251,14 +283,14 @@ class ZQQProcessor(processor.ProcessorABC):
                 region=region,
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(candidatejet.msdcorr, cut),
-                gruddt=normalize(candidatejet.gruddt, cut),
+                #gruddt=normalize(candidatejet.gruddt, cut),
                 #n2=normalize(candidatejet.n2b1, cut),
                 #gru=normalize(candidatejet.twoProngGru, cut),
                 #rho=normalize(candidatejet.rhocorr, cut),
                 in_v3_ddt=normalize(candidatejet.in_v3_ddt, cut),
                 #nPFConstituents=normalize(candidatejet.nPFConstituents, cut),
                 #nJet=candidatejet.counts[cut],
-                Vmatch=normalize(candidatejet.genMatchFull, cut),
+                #Vmatch=normalize(candidatejet.genMatchFull, cut),
                 mu_pt=normalize(leadingmuon.pt, cut),
                 mu_pfRelIso04_all=normalize(leadingmuon.pfRelIso04_all, cut),
                 weight=weight,

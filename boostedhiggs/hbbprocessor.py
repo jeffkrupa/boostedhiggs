@@ -174,7 +174,7 @@ class HbbProcessor(processor.ProcessorABC):
         ][:, 0:1]
         selection.add('minjetkin', (
             (candidatejet.pt >= 450)
-            & (candidatejet.msdcorr >= 40.)
+            & (candidatejet.msdcorr >= 47.)
             & (abs(candidatejet.eta) < 2.5)
         ).any())
         selection.add('jetacceptance', (
@@ -250,8 +250,8 @@ class HbbProcessor(processor.ProcessorABC):
         msd_matched = candidatejet.msdcorr * self._msdSF[self._year] * (genflavor > 0) + candidatejet.msdcorr * (genflavor == 0)
 
         regions = {
-            'signal': ['trigger','minjetkin','noleptons','jetacceptance', 'noleptons','jetid',],#'jetid', 'noleptons',],# 'n2ddt','antiak4btagMediumOppHem'],#, 'met',],
-            'muoncontrol': ['muontrigger','minjetkin', 'jetacceptance', 'jetid', 'ak4btagMedium08', 'onemuon', 'muonkin', 'muonDphiAK8'],
+            'signal': ['trigger','minjetkin',],#'noleptons','jetacceptance', 'noleptons','jetid',],#'jetid', 'noleptons',],# 'n2ddt','antiak4btagMediumOppHem'],#, 'met',],
+            'muoncontrol': ['muontrigger','minjetkin', 'jetid','muonDphiAK8','muonkin', 'ak4btagMedium08', 'onemuon',],# 'muonkin', 'muonDphiAK8'],
             'noselection': [],
         }
 

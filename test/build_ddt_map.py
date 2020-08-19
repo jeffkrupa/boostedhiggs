@@ -11,7 +11,8 @@ import scipy.ndimage as sc
 import matplotlib.pyplot as plt
 from collections import defaultdict, OrderedDict
 
-DISCRIMINATOR = "jet_in_v3"
+#DISCRIMINATOR = "jet_in_v3"
+DISCRIMINATOR = "jet_twoProngGru"
 HISTNAME = "jet_kin"
 
 def plot(template, name):
@@ -70,6 +71,21 @@ def build_ddt_map(coffeafile, percentile, postfix):
     save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
     plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
 
+    #make an array
+    print('rho')
+    [print(round(rho,3),',', end="") for rho in template.axis('jet_rho').edges()]
+    print('pt')
+    [print(round(pt,3),',', end="")  for pt  in template.axis('jet_pt') .edges()]
+    print('hist')
+    print("{",end="")
+    for ipt in range(0,len(template.axis('jet_pt').edges())-1):
+        print("{", end="")
+        for irho in range(0,len(template.axis('jet_rho').edges())-1):
+
+           print(0. if abs(template.values()[()][ipt,irho]) == np.inf else round(template.values()[()][ipt,irho],3),',',end="")
+        print("},",end=" ")
+
+    print("}",end="")
     #smoothing
     smooth_qmap = sc.filters.gaussian_filter(qmap,1)
 

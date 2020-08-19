@@ -115,7 +115,7 @@ for sample in samplelist:
     print('Submitting '+prefix)
 
     #if 'JetHT' in sample: files_per_job=1
-    if 'TTToHadronic' in sample: files_per_job=10
+    #if 'TTToHadronic' in sample: files_per_job=10
 
     njobs = int(totfiles[sample]/files_per_job)+1
     remainder = totfiles[sample]-int(files_per_job*(njobs-1))
