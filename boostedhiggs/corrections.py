@@ -4,7 +4,8 @@ import awkward as ak
 from coffea.util import load
 from coffea import hist, lookup_tools
 
-compiled = load(os.path.join(os.path.dirname(__file__), 'data', 'corrections_4.coffea'))
+compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_4.coffea'))
+#compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'boostedhiggs', 'data', 'corrections_4.coffea'))
 
 # hotfix some crazy large weights
 compiled['2017_pileupweight']._values = np.minimum(5, compiled['2017_pileupweight']._values)

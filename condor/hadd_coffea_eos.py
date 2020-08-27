@@ -5,7 +5,7 @@ import pprint
 
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
-indir = "6Aug20_debugQCDmuonCR_4"
+indir = "6Aug20_debugQCDmuonCR_12_debug_Jeff"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 10
@@ -19,6 +19,8 @@ for name in onlyfiles:
   #if (os.path.isfile("%s%s/%s.coffea" % (eosdir,indir,name))): names.append("%s%s/%s.coffea" % (eosdir,indir,name))
   #if 'TT' in name: continue
   #if 'LNu' in name: continue
+  if 'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8_14' in name: continue
+  if 'ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8_27' in name: continue
   names.append("%s%s/%s.coffea" % (eosdir,indir,name))
  
 print(len(names))
@@ -42,7 +44,9 @@ for i in range(0,len(names),chunk_size):
         flist[0][key] = flist[0][key] + flist[fi][key]
   
   print(flist[0])
-  flist[0]['templates'] = flist[0]['templates'].sum('pt',overflow='allnan')  
+  flist[0]['templates'] = flist[0]['templates'].sum('pt')#,overflow='allnan')  
+  #flist[0]['templates'].rebin('pt',2)
+  #flist[0]['templates'].rebin('mu_pt',2
   util.save(flist[0],'%s/hists_sum_%i.coffea' % (indir,i))
 
   for f in flist:

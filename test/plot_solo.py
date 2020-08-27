@@ -76,7 +76,7 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
         exceptions.append(var)
     if (regionsel is not ''):
         exceptions.append('region')
-    x = h.sum(*[ax for ax in h.axes() if ax.name not in exceptions],overflow='allnan')
+    x = h.sum(*[ax for ax in h.axes() if ax.name not in exceptions],)#overflow='allnan')
     mc = h.remove(['JetHT','SingleMuon',],'process')
 
     mc_processes = ['zqq','wqq','qcd','tt','st','wlnu',]
@@ -85,7 +85,7 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     if 'signal' in regionsel:
         data = h.remove(mc_processes + ['SingleMuon'],'process')# if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
         mc = h.remove(['JetHT','SingleMuon',],'process')
-        kfactor = QCDkfactor(data,mc)
+        kfactor =1. # QCDkfactor(data,mc)
         x.scale({'qcd':kfactor},'process')
         print('applying QCD k factor:', kfactor)
     for var,val in vars_cut.items():
@@ -94,7 +94,11 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
             x = x.integrate(var,slice(val[0],val[1]))
     for reg in regionsel:
         print('integrating ',reg)
-        x = x.integrate('region',reg)
+        #x = x.integrate('region',reg)
+        #x.remove([p for p in h.axis('process').identifiers() if reg not in str(p)], 'region')
+    x = x.remove(['noselection','signal'] if 'ttbar' in regionsel else ['ttbar_muoncontrol'] ,'region')
+    print(x.axis('region').identifiers())
+    x = x.sum('region')
     if var_name in vars_cut.keys():
         x = x[:, vars_cut[var_name][0]:vars_cut[var_name][1]]
 
@@ -119,7 +123,6 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     else:
        fig,ax = plt.subplots()
 
-    print(mc)
     hist.plot1d(mc,
                 overlay='process',
                 ax=ax,
