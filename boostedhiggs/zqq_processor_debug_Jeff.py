@@ -152,21 +152,13 @@ class ZQQProcessor(processor.ProcessorABC):
             & (events.FatJet.genMatchFull if ('WJetsToQQ' in dataset or 'ZJetsToQQ' in dataset) else (1==1))).all()
 
 
-        print('n good jets', len(goodjet_sel[goodjet_sel]))
+        print('# good jets', len(goodjet_sel[goodjet_sel]))
         goodmuon_sel = ((events.Muon.pt>55) 
             & (abs(events.Muon.eta) < 2.1) 
             & (events.Muon.looseId).astype(bool) 
             & (events.Muon.pfRelIso04_all < 0.25)
             & (goodjet_sel)).all()
-        print('n good muons',len(goodmuon_sel[goodmuon_sel]))
-
-        #print('n events with good muon and good jet',len(events[goodmuon_sel & goodjet_sel][events[goodmuon_sel & goodjet_sel]]))
-
-        x= events.FatJet[goodmuon_sel & goodjet_sel].pt.flatten()
-        print(x)
-        print('n events with good muon and good jet',len(x))
-        #goodmuon_sel &= goodjet_sel
-        #goodjet_sel &= goodmuon_sel
+        print('# good muons',len(goodmuon_sel[goodmuon_sel]))
         selection.add('muonkin', goodmuon_sel)
         selection.add('jetkin', goodjet_sel)
 
@@ -232,43 +224,23 @@ class ZQQProcessor(processor.ProcessorABC):
            'ttbar_muoncontrol'      : ['muon_trigger', 'jetkin','muonkin','muonDphiAK8','ak4btagMedium08','noelectron_notau',],
            'noselection' : [],#'vselection_muoncontrol' : ['muon_trigger', 'v_selection_jetkin', 'genmatch', 'jetid', 'ak4btagMedium08', 'muonkin','met'],
         }
-        '''for region, cuts in regions.items():
-            allcuts = set() 
-            print ('weights', weights.weight().shape)
-            print( len(events)) 
-            output['cutflow'].fill(dataset=dataset, region=region, cut=0)#,weight=weights.weight())
-            
-            for i, cut in enumerate(cuts):
-                 
-                allcuts.add(cut)
-                cut = selection.all(*allcuts)
-                output['cutflow'].fill(dataset=dataset, region=region, cut=i + 1)# weight=weights.weight()[cut])
-        '''
         allcuts_signal = set()
         output['cutflow_signal'][dataset]['none']+= float(weights.weight().sum())
         allcuts_ttbar_muoncontrol = set()
         output['cutflow_ttbar_muoncontrol'][dataset]['none']+= float(weights.weight().sum())
   
-        #for cut in regions['signal']:
-        #    allcuts_signal.add(cut)
-        #    output['cutflow_signal'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_signal)].sum())
+        for cut in regions['signal']:
+            allcuts_signal.add(cut)
+            output['cutflow_signal'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_signal)].sum())
 
         for cut in regions['ttbar_muoncontrol']:
             allcuts_ttbar_muoncontrol.add(cut)
             output['cutflow_ttbar_muoncontrol'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_ttbar_muoncontrol)].sum())
 
         def normalize(val, cut):
-            #return val[cut].pad(1, clip=True).fillna(0).flatten()
             return val[cut].pad(1, clip=True).fillna(0).flatten()
 
 
-        print('weights shape', weights.weight()[selection.all(*regions['ttbar_muoncontrol'])].shape)
-        print('candidatejet shape', candidatejet, candidatejet.shape)
-        print('candidatejet.flatten shape', candidatejet.flatten(), candidatejet.flatten().shape)
-        print('candidatejet shape', candidatemuon, candidatemuon.shape)
-        print('candidatejet shape', candidatemuon.flatten(), candidatemuon.flatten().shape)
-        print('candidatejet var shape', normalize(candidatejet.pt, selection.all(*regions['ttbar_muoncontrol'])).shape)
-        print('candidatemuon var shape', normalize(candidatemuon.pt, selection.all(*regions['ttbar_muoncontrol'])).shape)
         def fill(region, systematic=None, wmod=None):
             print('filling %s'%region)
             selections = regions[region]
