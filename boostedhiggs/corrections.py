@@ -37,7 +37,7 @@ def corrected_msoftdrop(fatjets):
 def shift(fatjets, algo, year='2017'):
     fatjets_msdcorr = corrected_msoftdrop(fatjets)
     fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
-
+    #2017_inddt90pctl_rho_pt
     return compiled['%s_%s_rho_pt'%(year,algo)](fatjets.pt, fatjets_rhocorr)
 
 def inddt_shift(fatjets, year='2017'):
@@ -92,6 +92,11 @@ def add_VJets_NLOkFactor(weights, genBosonPt, year, dataset):
         return
     weights.add('VJets_NLOkFactor', nlo_over_lo_qcd * nlo_over_lo_ewk)
 
+def add_singleMuTriggerWeight(weights, mu_absEta, mu_pt, year):
+    mu_absEta = abs(mu_absEta.pad(1, clip=True).fillna(0).flatten()) 
+    mu_pt     = mu_pt.pad(1, clip=True).fillna(0).flatten() 
+    nom       = compiled[f'{year}_muTrigAbsEta_pt'](mu_absEta, mu_pt)
+    weights.add('singleMuonTrigger',nom)
 
 def add_jetTriggerWeight(weights, jet_msd, jet_pt, year):
     jet_msd = jet_msd.pad(1, clip=True).fillna(0).flatten()

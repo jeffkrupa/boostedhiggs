@@ -33,9 +33,9 @@ class DDTProcessor(processor.ProcessorABC):
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                #hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 525, 1500),
-                #hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
-                hist.Bin('jet_mass', r'Jet $m_{SD}$', 41, 40, 350),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1200),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
+                #hist.Bin('jet_mass', r'Jet $m_{SD}$', 41, 40, 350),
                 hist.Bin('jet_in_v3', 'IN  value', 100, 0.0, 1.0),
                 #hist.Bin('jet_twoProngGru', r'Jet GRU score', 100, 0., 1.0),
                 #hist.Bin('jet_n2b1', r'Jet N_{2}}score', 100, 0., 0.5),
@@ -81,7 +81,7 @@ class DDTProcessor(processor.ProcessorABC):
         fatjets['in_v3'] = IN.v3
         candidatejet = fatjets[
             # https://github.com/DAZSLE/BaconAnalyzer/blob/master/Analyzer/src/VJetLoader.cc#L269
-            (fatjets.pt > 525)
+            (fatjets.pt > 200)
             & (abs(fatjets.eta) < 2.5)
             # & fatjets.isLoose  # not always available
             & (fatjets.rhocorr >= -5.5)
@@ -93,7 +93,7 @@ class DDTProcessor(processor.ProcessorABC):
 
         # basic jet selection
         selection.add('minjetkin', (
-            (candidatejet.pt >= 525)
+            (candidatejet.pt >= 200)
             & (candidatejet.msdcorr >= 40.)
             & (abs(candidatejet.eta) < 2.5)
         ).any())
@@ -146,9 +146,9 @@ class DDTProcessor(processor.ProcessorABC):
             output['jet_kin'].fill(
                 dataset=dataset,
                 region=region,
-                #jet_pt=normalize(candidatejet.pt, cut),
-                jet_mass=normalize(candidatejet.msdcorr, cut),
-                #jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
+                jet_pt=normalize(candidatejet.pt, cut),
+                #jet_mass=normalize(candidatejet.msdcorr, cut),
+                jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
                 jet_in_v3=normalize(candidatejet.in_v3, cut),
                 #jet_n2b1=normalize(candidatejet.n2b1, cut),
             )

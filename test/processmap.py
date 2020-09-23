@@ -20,14 +20,14 @@ process_map["zll"] = [
     'DYJetsToLL_M-50_HT-800to1200_TuneCP5_13TeV-madgraphMLM-pythia8',
 ]
 process_map["wlnu"] = [
-    #'WJetsToLNu_HT-100To200_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-600To800_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-800To1200_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8',
-    #'WJetsToLNu_HT-2500ToInf_TuneCP5_13TeV-madgraphMLM-pythia8',
-    'WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-100To200_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-600To800_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-800To1200_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToLNu_HT-2500ToInf_TuneCP5_13TeV-madgraphMLM-pythia8',
+    #'WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8',
 ]
 process_map["zqq"] = [
     'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8',
@@ -73,6 +73,17 @@ process_map["qcd_ht1500to2000"] = [
 ]
 process_map["qcd_ht2000toinf"] = [
     'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
+]
+process_map["tttoleptonic"] = [
+    'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
+]
+
+process_map["tttosemileptonic"] = [
+    'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+]
+
+process_map["tttohadronic"] = [
+    'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
 ]
 '''
 process_map["tt"] = [

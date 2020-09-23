@@ -35,5 +35,5 @@ xrdcp -f root://cmseos.fnal.gov//store/user/jkrupa/SCRIPTNAME .
 python SCRIPTNAME --year YEAR --starti STARTNUM --endi ENDNUM --selsamples SAMPLE --outname ddt_test
 
 #move output to eos
-xrdcp -f ddt_test.coffea EOSOUT
+env -i xrdcp -f ddt_test.coffea EOSOUT
 

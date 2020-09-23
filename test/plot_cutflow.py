@@ -242,7 +242,7 @@ def getPlots(args):
     print(dict_mapped.values())
     # normalize to lumi
     #for h in hists_mapped.values():
-    #    h.scale({p: lumifb for p in h.identifiers('process')}, axis="process")
+    #   h.scale({p: lumifb for p in h.identifiers('process')}, axis="process")
     
     for r in args.regions:
         drawCutflow(dict_mapped[r],args.title,lumifb,r)

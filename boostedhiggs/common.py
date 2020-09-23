@@ -28,7 +28,7 @@ def match(left, right, metric, maximum=np.inf):
         return lr.i1[idx]
 
 
-def matchedBosonFlavor(candidates, bosons, maxdR=0.8):
+def matchedBosonFlavor(candidates, bosons, maxdR=0.6):
     matched = match(candidates, bosons, lambda a, b: a.delta_r(b), maxdR)
     childid = abs(matched.children.pdgId)
     genflavor = (childid == 5).any() * 3 + (childid == 4).any() * 2 + (childid < 4).all() * 1

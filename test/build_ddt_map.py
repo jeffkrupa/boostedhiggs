@@ -11,8 +11,8 @@ import scipy.ndimage as sc
 import matplotlib.pyplot as plt
 from collections import defaultdict, OrderedDict
 
-#DISCRIMINATOR = "jet_in_v3"
-DISCRIMINATOR = "jet_twoProngGru"
+DISCRIMINATOR = "jet_in_v3"
+#DISCRIMINATOR = "jet_twoProngGru"
 HISTNAME = "jet_kin"
 
 def plot(template, name):
@@ -23,7 +23,7 @@ def plot(template, name):
     cmstext = plt.text(0.0, 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
     addtext = plt.text(0.11, 1., "Simulation Preliminary",fontsize=10,horizontalalignment='left',verticalalignment='bottom', style='italic', transform=ax.transAxes)
 
-    plt.ylim(525,1500)
+    plt.ylim(200,1200)
     plt.xlim(-5.5,-2)
     plt.savefig('plots/'+name+'.pdf')
     plt.savefig('plots/'+name+'.png')
@@ -70,7 +70,7 @@ def build_ddt_map(coffeafile, percentile, postfix):
     print(template.values()[()])
     save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
     plot(template, 'ddt_%i_%s'%(int(100*percentile),postfix))
-
+    '''
     #make an array
     print('rho')
     [print(round(rho,3),',', end="") for rho in template.axis('jet_rho').edges()]
@@ -86,28 +86,30 @@ def build_ddt_map(coffeafile, percentile, postfix):
         print("},",end=" ")
 
     print("}",end="")
+    '''
     #smoothing
-    smooth_qmap = sc.filters.gaussian_filter(qmap,1)
+    #smooth_qmap = sc.filters.gaussian_filter(qmap,1)
 
-    template.clear()
-    template._sumw = {():smooth_qmap}
-    template.label = 'IN cut at ' + str(100*percentile) + '% (smoothed)'
+    #template.clear()
+    #template._sumw = {():smooth_qmap}
+    #template.label = 'IN cut at ' + str(100*percentile) + '% (smoothed)'
     values_nonan = template.values()[()]
-
+    print(values_nonan)
     save(template, '../boostedhiggs/ddtmap_smooth_%s.coffea'%postfix) 
     plot(template, 'ddt_%i_smoothed_%s'%(int(100*percentile), postfix))
-    '''
     import ROOT
-    outfile = ROOT.TFile("plots/n2ddtmap_2018bits_GaussianSmoothing1Sigma_CorrectVersion.root","recreate")
+    outfile = ROOT.TFile("plots/in_v3_ddtmap.root","recreate")
     outfile.cd()
     print(values_nonan.shape)
-    h1 = ROOT.TH2F("h1","h1",52, -6, -2.1, 100, 300, 1300)
-    for i in range(h1.GetNbinsX()):
-        for j in range(h1.GetNbinsY()):
-            h1.SetBinContent(i+1,j+1,values_nonan[j][i])
+    h1 = ROOT.TH2F("h1","h1",100, 200, 1200, 180, -5.5, -2.)
+    print(h1.GetNbinsX()-1,h1.GetNbinsY()-1)
+    for i in range(h1.GetNbinsX()-1):
+        for j in range(h1.GetNbinsY()-1): 
+             #print(values_nonan[i][j])
+             h1.SetBinContent(i+1,j+1,values_nonan[i][j])
+
     h1.Write()
     outfile.Close()
-    '''
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--coffeafile',       dest='coffeafile',        default='.',       help="coffea file location",        type=str)
