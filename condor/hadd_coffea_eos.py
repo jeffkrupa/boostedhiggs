@@ -9,7 +9,8 @@ eosdir = "/eos/uscms/store/user/jkrupa/coffea/"
 indir = "6Aug20_in_ddt_all_isoTight_dR08matching_looserTau_v3_w10ptcl_withgrun2_v2"
 indir = "6Aug20_in_ddt_all_isoTight_looserTau_v3_w10ptclFIX_withgrun2_matchedBoson06" 
 indir = "6Aug20_in_ddt_all_isoTight_looserTau_v3_w10ptclFIX_withgrun2_matchedBoson06_v3"
-indir = "22Sep20_QCD"
+indir = "22Sep20_all_vselectionFIX_v4"
+indir = "22Sep20_all_vselectionFIX_v4_jettriggerweightFIX" 
 #indir = "6Aug20_in_ddt_all_isoTight_metcut_dR08matching_v3" #"6Aug20_debugQCDmuonCR_17_debug_Jeff_any" #6Aug20_debugQCDmuonCR_14_QCD_"
 os.system("mkdir -p %s" % indir)
 
@@ -23,7 +24,7 @@ names = []
 for name in onlyfiles:
   #if 'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8_4' in name: continue
   #if 'QCD_HT300to500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8_0' in name: continue
-  #if 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8_17' in name: continue #if 'JetHT' in name or 'SingleMuon' in name: continue
+  #if 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8' in name: continue #if 'JetHT' in name or 'SingleMuon' in name: continue
   #if 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8_1' in name or 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8_2' in name or 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8_4' in name or 'TTToHadronic_TuneCP5_13TeV-powheg-pythia8_5' in name: continue
   #if 'QCD' in name:
   #if (os.path.isfile("%s%s/%s.coffea" % (eosdir,indir,name))): names.append("%s%s/%s.coffea" % (eosdir,indir,name))
@@ -53,7 +54,7 @@ for i in range(0,len(names),chunk_size):
         flist[0][key] = flist[0][key] + flist[fi][key]
   
   #print(flist[0])
-  flist[0]['templates'] = flist[0]['templates'].sum('pt',overflow='all')  
+  #flist[0]['templates'] = flist[0]['templates'].sum('genflavor',overflow='allnan')  
   #flist[0]['templates'].rebin('pt',2)
   #flist[0]['templates'].rebin('mu_pt',2
   #flist[0]['in_v3'] = flist[0]['in_v3'].sum('n2',overflow='allnan')
@@ -113,6 +114,11 @@ for proc,flow in flist[0]['cutflow_signal'].items():
     for cut, val in flow.items():
    
        flist[0]['cutflow_signal'][proc][cut] *= scale1fb[proc]
+for proc,flow in flist[0]['cutflow_vselection'].items():
+    if 'JetHT' in proc or 'SingleMuon' in proc: continue
+    for cut, val in flow.items():
+   
+       flist[0]['cutflow_vselection'][proc][cut] *= scale1fb[proc]
 print('cutflow post-scale')
 pp = pprint.PrettyPrinter(indent=2)
 #pp.pprint(flist[0]['cutflow_ttbar_muoncontrol'])

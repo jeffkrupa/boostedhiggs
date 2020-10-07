@@ -1,11 +1,15 @@
 import logging
 from functools import partial
 import numpy as np
+import awkward
 from coffea import processor, hist
+np.set_printoptions(threshold=1000)
+from uproot_methods import TLorentzVectorArray
 #from boostedhiggs.twoProngGRU import *
 from coffea.nanoaod.methods import collection_methods, Candidate
 #collection_methods["FatJetPFCands"] = Candidate
-
+import coffea
+print(coffea.__version__)
 from boostedhiggs.corrections import (
     corrected_msoftdrop,
     gruddt_shift,
@@ -14,16 +18,32 @@ from boostedhiggs.corrections import (
     add_pileup_weight,
     add_jetTriggerWeight,
     add_VJets_NLOkFactor,
+    add_singleMuTriggerWeight,
 )
 from boostedhiggs.common import (
     getBosons,
+    matchedBosonFlavor,
 )
 
-def genmatch(events):
-    zprime = events.GenPart[((events.GenPart.pdgId==55) | (events.GenPart.pdgId==23) | (abs(events.GenPart.pdgId)==24)) & events.GenPart.hasFlags(["isLastCopy"])].flatten()
-    q0 = zprime.children[:, 0]
-    q1 = zprime.children[:, 1]
-    return (events.FatJet.delta_r2(q0) < 0.6*0.6) & (events.FatJet.delta_r2(q1) < 0.6*0.6)
+
+def genmatch(events,dataset):
+   
+    if   'WJetsToQQ'   in dataset: motherId = 24
+    elif 'ZJetsToQQ'   in dataset: motherId = 23
+    #elif 'TTTo'        in dataset: motherId = 6
+    elif 'VectorDiJet' in dataset: motherId = 55
+    else: return events.FatJet.pt.ones_like()
+
+    mother = events.GenPart[(abs(events.GenPart.pdgId) == motherId) & events.GenPart.hasFlags(["isLastCopy","fromHardProcess"])].flatten()
+
+    try: 
+       q0 = mother.children[:, 0]
+       q1 = mother.children[:, 1]
+    except:
+       q0 = mother.children[:, 0]
+       q1 = mother.children[:, 1]
+
+    return (events.FatJet.delta_r2(q0) < 0.8*0.8) & (events.FatJet.delta_r2(q1) < 0.8*0.8)
 
     
 class ZQQProcessor(processor.ProcessorABC):
@@ -45,41 +65,55 @@ class ZQQProcessor(processor.ProcessorABC):
         self._muontriggers = {
             '2017': [
                 'Mu50', 
-                #'TkMu50',
+                 #'Mu55',
+                 #'OldMu100',
                  ]
         }
         self._accumulator = processor.dict_accumulator({
             'sumw': processor.defaultdict_accumulator(float),
+            'event': hist.Hist(
+                'Event', hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('MET', r'MET [GeV]', 20,20,500),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('nJet', r'Number of FatJets', [0.5,1.5,2.5,3.5,4.5,6.5]),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('nPFConstituents', r'Number of PFCandidates', 30,0,60),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+            ),
+            'muon': hist.Hist(
+                'Muon', hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('mu_pt', 'Leading muon p_{T}', 15,50., 700.),
+                hist.Bin('mu_pfRelIso04_all', 'Muon pfRelIso04 isolation', 10,0.,0.25),
+            ),
+            'in_v3': hist.Hist(
+                'in_v3', hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('in_v3', 'IN  value', 25,0,1),
+                hist.Bin('gru', 'GRU  value', 25,0,1),
+                hist.Bin('n2', 'n2  value', 25,0,0.5),
+                hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+            ),
+            'deepAK8': hist.Hist(
+                'deepAK8', hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('deepTagMDWqq', 'DeepTagMDWqq', 25,0,1),
+                hist.Bin('deepTagMDZqq', 'DeepTAGMDZqq', 25,0,1),
+                hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
+                hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+            ),
             'templates': hist.Hist(
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
                 #hist.Cat('systematic', 'Systematic'),
-                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 20,500,1000),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
+                hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 25,200,1000),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
                 hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
-                #hist.Bin('gru', 'GRU value',20,0.,1.),
                 hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-2,0,2]),
-                #hist.Bin('rho', 'jet rho', 20,-5.5,-2.),#[-5.5,-5.,-4.5,-4.,-3.5,-3.,-2.5,-2.]),
-                #hist.Bin('n2', 'N$_2$ value', 20, 0., 0.5),
-                #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', 21, -0.3, 0.3),
-                #hist.Bin('Vmatch', 'Matched to V', [-1,0,1]),
+                hist.Bin('n2ddt', 'N$_2^{DDT}$ value', [-2,0,2]),
                 hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
-                hist.Bin('mu_pt', 'Leading muon p_{T}', 15,50., 700.),
-                hist.Bin('mu_pfRelIso04_all', 'Muon pfRelIso04 isolation', 10,0.,0.25),
-                #hist.Bin('nPFConstituents', 'Number of PF candidates',41,20,60),
-                #hist.Bin('nJet', 'Number of fat jets', 10,0,9), 
             ),
-            #'gruddt' : hist.Hist(
-            #    hist.Cat('dataset', 'Dataset'),
-            #    hist.Cat('region', 'Region'),
-            #'cutflow': hist.Hist(
-            #    'Events',
-            #    hist.Cat('dataset', 'Dataset'),
-            #    hist.Cat('region', 'Region'),
-            #    hist.Bin('cut', 'Cut index', 11, 0, 11),
-            #),
             'cutflow_signal' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
             'cutflow_ttbar_muoncontrol' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
+            'cutflow_vselection' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
 
         })
     @property
@@ -87,7 +121,6 @@ class ZQQProcessor(processor.ProcessorABC):
         return self._accumulator
 
     def process(self, events):
-        #assert(len(np.unique(events.event)) == len((events.event)))
         dataset = events.metadata['dataset']
         print('process dataset', dataset)
         isRealData = 'genWeight' not in events.columns
@@ -98,7 +131,6 @@ class ZQQProcessor(processor.ProcessorABC):
         if not isRealData:
             output['sumw'][dataset] += events.genWeight.sum()
 
-       
 
 
         # trigger paths
@@ -122,161 +154,183 @@ class ZQQProcessor(processor.ProcessorABC):
         selection.add('fatjet_trigger', trigger_fatjet)
         selection.add('muon_trigger', trigger_muon) 
 
-        # run model on PFCands associated to FatJet (FatJetPFCands)
-        #events.FatJet.array.content["PFCands"] = type(events.FatJetPFCands.array).fromcounts(events.FatJet.nPFConstituents.flatten(), events.FatJetPFCands.flatten())
-        #events.FatJet.array.content["twoProngGru"] = run_model(events.FatJet.flatten())
-   
-        #else:
-        #  events.FatJet["genMatchFull"] = np.ones(len(events))
-        fatjets = events.FatJet
+
+        #jet corrected kinematics
         gru = events.GRU
         IN  = events.IN
+        fatjets = events.FatJet
         fatjets['msdcorr'] = corrected_msoftdrop(fatjets)
         fatjets['rhocorr'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
         fatjets['gruddt'] = gru.v25 - shift(fatjets,algo='gruddt',year=self._year)
+        fatjets['gru'] = gru.v25
+        fatjets['in_v3'] = IN.v3 
         fatjets['in_v3_ddt'] = IN.v3 - shift(fatjets,algo='inddt',year=self._year)
+        fatjets['in_v3_ddt_90pctl'] = IN.v3 - shift(fatjets,algo='inddt90pctl',year=self._year)
         fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
-        #fatjets['count'] = fatjets.count
-        if 'WJetsToQQ' in dataset or 'ZJetsToQQ' in dataset: fatjets["genMatchFull"] = genmatch(events)
-        else: fatjets["genMatchFull"] = fatjets.pt.zeros_like() #np.zeros(events.size, dtype='bool') 
 
-        candidatejet = fatjets[
-            (fatjets.pt > 525)
-            & (abs(fatjets.eta) < 2.5)
-            & (fatjets.msdcorr >= 40.)
-            & (fatjets.rhocorr >= -5.5)
-            & (fatjets.rhocorr <= -2)
-            & (fatjets.genMatchFull if ('WJetsToQQ' in dataset or 'ZJetsToQQ' in dataset) else (1==1))
-             
-        ][:, 0:1]
 
+        fatjets["genMatchFull"] = genmatch(events, dataset)
+        #else: fatjets["genMatchFull"] = fatjets.pt.zeros_like()  #np.zeros(events.size, dtype='bool') 
+
+
+      
+        candidatejet = fatjets[:,:1]
+        candidatemuon = events.Muon[:,:5]
+        
+        # run model on PFCands associated to FatJet (FatJetPFCands)
+        #events.FatJet.array.content["PFCands"] = type(events.FatJetPFCands.array).fromcounts(events.FatJet.nPFConstituents.flatten(), events.FatJetPFCands.flatten())
+        #events.FatJet.array.content["twoProngGru"] = run_model(events.FatJet.flatten())
+  
+        selection.add('pt', (candidatejet.pt > 525).any())
+        selection.add('msdcorr', (candidatejet.msdcorr > 40).any())
         # basic jet selection
-        selection.add('minjetkin', ( 
-            (candidatejet.pt >= 500)
-            & (candidatejet.msdcorr >= 40.)
+        goodjet_sel  = ((candidatejet.pt > 525)
             & (abs(candidatejet.eta) < 2.5)
-            & (candidatejet.rhocorr >= -5.5)
-            & (candidatejet.rhocorr <= -2)
-        ).all())
-        selection.add('signal_pt', (
-            (candidatejet.pt >= 525)
-        ).any())
+            & (candidatejet.msoftdrop > 40.)
+            & (candidatejet.rhocorr > -5.5)
+            & (candidatejet.rhocorr < -2)
+            & (candidatejet.genMatchFull if ('WJetsToQQ' in dataset or 'ZJetsToQQ' in dataset) else (1==1))).any()
 
-        selection.add('mass', (candidatejet.msdcorr >= 40.).any())
-        selection.add('v_selection_jetkin', ( 
-            (candidatejet.pt >= 200)
-            & (candidatejet.rhocorr >= -5.5)
-            & (candidatejet.rhocorr <= -2)
-        ).any())
-        selection.add('genmatch', candidatejet.genMatchFull.pad(1).fillna(0).flatten().astype(bool) if ('WJetsToQQ' in dataset or 'ZJetsToQQ' in dataset) else candidatejet.pt.pad(1).fillna(0).flatten().astype(bool))
-        #if isRealData:
-        #   selection.add('blinding', (
-        #      (events.event %10 == 0)
-        #   ))
+        vselection_goodjet_sel = ((candidatejet.pt > 200)
+            & (abs(candidatejet.eta) < 2.5)
+            & (candidatejet.msoftdrop > 40.)).any()
+            #& (candidatejet.genMatchFull if ('TTTo' in dataset) else (1==1))).any()
+            #& (candidatejet.rhocorr > -5.5)
+            #& (candidatejet.rhocorr < -2)).any()
+           
+        selection.add('vselection_jetkin',vselection_goodjet_sel)  
+   
+        #goodmuon sel for muon CR (lep vetos below)
+        goodmuon_sel = ((candidatemuon.pt>55) 
+            & (abs(candidatemuon.eta) < 2.1) 
+            & (candidatemuon.looseId).astype(bool) 
+            & (candidatemuon.pfRelIso04_all < 0.15)).any()
+        vselection_goodmuon_sel = ((candidatemuon.pt>53)
+            & (abs(candidatemuon.eta) < 2.1)  
+            & (candidatemuon.tightId).astype(bool))
+
+            #& (candidatemuon.pfRelIso04_all < 0.15))
+
+        vselection_goodmuon_sel_loose = ((candidatemuon.pt>20)
+            & (candidatemuon.looseId).astype(bool)
+            & (abs(candidatemuon.eta) < 2.4))
+       
+
+        selection.add('vselection_muonkin', vselection_goodmuon_sel.any())
+        selection.add('vselection_onetightmuon', vselection_goodmuon_sel.sum()==1)
+        selection.add('vselection_oneloosemuon', vselection_goodmuon_sel_loose.sum()==1)
+
+        candidatemuon=candidatemuon[:,0:1]
+
+        selection.add('muonkin', goodmuon_sel)
+        selection.add('jetkin', goodjet_sel)
+
         selection.add('n2ddt', (candidatejet.n2ddt < 0.).any())
         selection.add('jetid', candidatejet.isTight.any())
         selection.add('met', events.MET.pt > 40.) 
 
-        muon = (
-            (events.Muon.pt > 10)
-            & (abs(events.Muon.eta) < 2.1)
-            #& (events.Muon.pfRelIso04_all < 0.4)
-            & (events.Muon.looseId).astype(bool)
-        )
-        nmuons=muon.sum()
-        ngoodmuons = (
-             (events.Muon.pt > 55) 
-           & (abs(events.Muon.eta) < 2.1)
-           & (events.Muon.pfRelIso04_all < 0.4)
-           & (events.Muon.mediumId).astype(bool)
-        ).sum()
-        leadingmuon = events.Muon[
-             (events.Muon.pt > 55)
-           & (abs(events.Muon.eta) < 2.1)
-           & (events.Muon.looseId)
-           & (events.Muon.pfRelIso04_all < 0.25)
-        ][:,0:1] #[ #muon 
-        #& (events.Muon.pt > 55)
-        #][:, 0:1]
-
-        goodmuon_sel = ((leadingmuon.pt>55) & (abs(leadingmuon.eta) < 2.1) & (leadingmuon.looseId).astype(bool) & (leadingmuon.pfRelIso04_all < 0.25))
-    
-        muon_ak8_pair = leadingmuon.cross(candidatejet,nested=True) #(candidatejet[candidatejet.pt>400 & (abs(candidatejet.eta) < 2.5) & (candidatejet.rhocorr >= -5.5) & (candidatejet.rhocorr <= -2)]), nested=True)
+        muon_ak8_pair = candidatemuon.cross(candidatejet,nested=True) 
  
         selection.add('muonDphiAK8', (
             abs(muon_ak8_pair.i0.delta_phi(muon_ak8_pair.i1)) > 2*np.pi/3
         ).all().all())
+        selection.add('vselection_muonDphiAK8', (
+            abs(muon_ak8_pair.i0.delta_phi(muon_ak8_pair.i1)) > 1
+        ).all().all())
 
         
-
-        selection.add('muonkin', (
-            goodmuon_sel
-        ).all())
-
         #ak4 puppi jet for CR
         jets = events.Jet[
             ((events.Jet.pt > 50.)
-            & (abs(events.Jet.eta) < 3)
-            & (events.Jet.isTight).astype(bool))
-        ]
+            & (abs(events.Jet.eta) < 2.5))
+        ][:,:10]
+
 
         # only consider first 4 jets to be consistent with old framework
-        jets = jets[:, :4]
         ak4_ak8_pair = jets.cross(candidatejet, nested=True)
         dr = abs(ak4_ak8_pair.i0.delta_r(ak4_ak8_pair.i1))
-        ak4_away = jets[(dr > 0.8).all()]
-        #selection.add('ak4btagMedium08', ak4_away.btagDeepB.max() > 0.4941)
-        selection.add('ak4btagMedium08', ak4_away.btagCSVV2.max() > 0.8838)
+        dphi = abs(ak4_ak8_pair.i0.delta_phi(ak4_ak8_pair.i1))
 
-        #generic lep veto
+        ak4_away = jets[(dr > 0.8).all()]
+        selection.add('ak4btagMedium08', ak4_away.btagCSVV2.max() > 0.8838)
+        ak4_opposite = jets[(dphi > np.pi / 2).all()]
+        selection.add('antiak4btagMediumOppHem', ak4_opposite.btagCSVV2.max() < 0.8838)
+
+        mu_p4 = TLorentzVectorArray.from_ptetaphim(candidatemuon.pt.fillna(0),candidatemuon.eta.fillna(0),candidatemuon.phi.fillna(0),candidatemuon.mass.fillna(0))
+        met_p4 = TLorentzVectorArray.from_ptetaphim(awkward.JaggedArray.fromiter([[v] for v in events.MET.pt]), awkward.JaggedArray.fromiter([[v] for v in np.zeros(events.size)]), awkward.JaggedArray.fromiter([[v] for v in events.MET.phi]), awkward.JaggedArray.fromiter([[v] for v in np.zeros(events.size)]))
+
+        met_candidatemuon_pair = met_p4.cross(mu_p4)
+
+        Wleptoniccandidate = met_candidatemuon_pair.i0 + met_candidatemuon_pair.i1
+
+        selection.add('Wleptonic_candidate',(Wleptoniccandidate.pt>200).any())
+
+
+        vselection_jets = events.Jet[
+            ((events.Jet.pt > 30.)
+            & (abs(events.Jet.eta) < 2.4))
+        ]
+
+        vselection_ak4_ak8_pair = vselection_jets.cross(candidatejet, nested=True)
+        muon_ak4_pair = vselection_jets.cross(candidatemuon,nested=True)
+        dr_ak8 = abs(vselection_ak4_ak8_pair.i0.delta_r(vselection_ak4_ak8_pair.i1))
+        dr_muon = abs(muon_ak4_pair.i0.delta_r(muon_ak4_pair.i1))
+        ak4_away = vselection_jets[(dr_ak8 > 0.8).all()]
+        selection.add('vselection_ak4btagMedium08', ak4_away.btagCSVV2.max() > 0.8838)
+
+        ak4_away = vselection_jets[(dr_muon>0.3).all()]
+
+        selection.add('vselection_muonDphiAK4', ak4_away.btagCSVV2.max() > 0.8838)
 
         nelectrons = (
-            (events.Electron.pt > 10.)
+            ((events.Electron.pt > 10.)
             & (abs(events.Electron.eta) < 2.5)
-            & (events.Electron.cutBased >= events.Electron.LOOSE)
+            #& (events.Electron.cutBased >= events.Electron.LOOSE))
+            #& (events.Electron.cutBased_Fall17_V1 >= 1))
+            & (events.Electron.cutBased >= 2))
+        ).sum()
+        nmuons = (
+            ((events.Muon.pt > 10)
+            & (abs(events.Muon.eta) < 2.1)
+            #& (events.Muon.pfRelIso04_all < 0.4)
+            & (events.Muon.looseId).astype(bool))
         ).sum()
 
         ntaus = (
-            (events.Tau.pt > 20.)
-            & (events.Tau.idMVAnewDM2017v2 >=4)
-            #& (events.Tau.idDecayMode).astype(bool)
-            # bacon iso looser than Nano selection
+            ((events.Tau.pt > 20.)
+            #& (events.Tau.idMVAnewDM2017v2 >=4))
+            & (events.Tau.idDecayMode).astype(bool)
+            & (events.Tau.rawIso < 5)
+            & (abs(events.Tau.eta) < 2.3))
         ).sum()
-        #selection.add('onemuon', (ngoodmuons==1)& (nelectrons == 0) & (ntaus == 0))
         selection.add('noleptons', (nmuons == 0) & (nelectrons == 0) & (ntaus == 0))
         selection.add('noelectron_notau', (nelectrons == 0) & (ntaus == 0))
-     
+        #weights.add('metfilter', events.Flag.METFilters) 
+        if isRealData:
+            genflavor = candidatejet.pt.zeros_like().pad(1, clip=True).fillna(-1).flatten()
         if not isRealData: 
             weights.add('genweight', events.genWeight)
-            #add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
-            #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year) signal region only
+            add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
+            #add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year) #signal region only
+            #add_singleMuTriggerWeight(weights, abs(candidatemuon.eta), candidatemuon.pt, self._year)
             bosons = getBosons(events)
             genBosonPt = bosons.pt.pad(1, clip=True).fillna(0)
             add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
+            genflavor = matchedBosonFlavor(candidatejet, bosons).pad(1, clip=True).fillna(-1).flatten()
+          
             #b-tag weights
         regions = {
-           'signal'                 : ['fatjet_trigger','minjetkin','signal_pt','mass','noleptons','jetid','genmatch'],
-           'ttbar_muoncontrol'      : ['muon_trigger', 'minjetkin','jetid', 'mass', 'muonkin','muonDphiAK8','ak4btagMedium08','noelectron_notau',],
+           'signal'                 : ['fatjet_trigger', 'jetkin', 'noleptons','jetid','antiak4btagMediumOppHem',],
+           'ttbar_muoncontrol'      : ['muon_trigger', 'pt','msdcorr','jetid', 'jetkin','muonkin','muonDphiAK8','ak4btagMedium08','noelectron_notau',],
+           'vselection'             : ['muon_trigger', 'vselection_jetkin','vselection_muonkin','vselection_onetightmuon','vselection_oneloosemuon','vselection_muonDphiAK8','vselection_ak4btagMedium08','vselection_muonDphiAK4','Wleptonic_candidate','met'],
            'noselection' : [],#'vselection_muoncontrol' : ['muon_trigger', 'v_selection_jetkin', 'genmatch', 'jetid', 'ak4btagMedium08', 'muonkin','met'],
         }
-        #if isRealData and 'SingleMuon' not in dataset:
-        #    regions['signal'].append('blinding')
-        '''for region, cuts in regions.items():
-            allcuts = set() 
-            print ('weights', weights.weight().shape)
-            print( len(events)) 
-            output['cutflow'].fill(dataset=dataset, region=region, cut=0)#,weight=weights.weight())
-            
-            for i, cut in enumerate(cuts):
-                 
-                allcuts.add(cut)
-                cut = selection.all(*allcuts)
-                output['cutflow'].fill(dataset=dataset, region=region, cut=i + 1)# weight=weights.weight()[cut])
-        '''
         allcuts_signal = set()
         output['cutflow_signal'][dataset]['none']+= float(weights.weight().sum())
         allcuts_ttbar_muoncontrol = set()
         output['cutflow_ttbar_muoncontrol'][dataset]['none']+= float(weights.weight().sum())
+        allcuts_vselection = set()
+        output['cutflow_vselection'][dataset]['none']+= float(weights.weight().sum())
   
         for cut in regions['signal']:
             allcuts_signal.add(cut)
@@ -286,33 +340,61 @@ class ZQQProcessor(processor.ProcessorABC):
             allcuts_ttbar_muoncontrol.add(cut)
             output['cutflow_ttbar_muoncontrol'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_ttbar_muoncontrol)].sum())
 
+        for cut in regions['vselection']:
+            allcuts_vselection.add(cut)
+            output['cutflow_vselection'][dataset][cut] += float(weights.weight()[selection.all(*allcuts_vselection)].sum())
+
         def normalize(val, cut):
             return val[cut].pad(1, clip=True).fillna(0).flatten()
-            #return val[cut].flatten() #pad(1, clip=True).fillna(0).flatten()
-
+ 
         def fill(region, systematic=None, wmod=None):
+            print('filling %s'%region)
             selections = regions[region]
             cut = selection.all(*selections)
-            sname = 'nominal' if systematic is None else systematic
             weight = weights.weight()[cut]
             output['templates'].fill(
                 dataset=dataset,
                 region=region,
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(candidatejet.msdcorr, cut),
+                n2ddt=normalize(candidatejet.n2ddt, cut),
                 gruddt=normalize(candidatejet.gruddt, cut),
-                #n2=normalize(candidatejet.n2b1, cut),
-                #gru=normalize(candidatejet.twoProngGru, cut),
-                #rho=normalize(candidatejet.rhocorr, cut),
-                in_v3_ddt=normalize(candidatejet.in_v3_ddt, cut),
-                #nPFConstituents=normalize(candidatejet.nPFConstituents, cut),
-                #nJet=candidatejet.counts[cut],
-                #Vmatch=normalize(candidatejet.genMatchFull, cut),
-                mu_pt=normalize(leadingmuon.pt, cut),
-                mu_pfRelIso04_all=normalize(leadingmuon.pfRelIso04_all, cut),
+                in_v3_ddt=normalize(candidatejet.in_v3_ddt_90pctl, cut),
+                weight=weight,
+            ),
+            output['event'].fill(
+                dataset=dataset,
+                region=region,
+                MET=events.MET.pt[cut],
+                nJet=fatjets.counts[cut],
+                nPFConstituents=normalize(candidatejet.nPFConstituents,cut),
+                weight=weight,
+            ),
+            output['muon'].fill(
+                dataset=dataset,
+                region=region,
+                mu_pt=normalize(candidatemuon.pt,cut),
+                mu_pfRelIso04_all=normalize(candidatemuon.pfRelIso04_all,cut),
+                weight=weight,
+            ),
+            output['deepAK8'].fill(
+                dataset=dataset,
+                region=region,
+                deepTagMDWqq=normalize(candidatejet.deepTagMDWqq,cut),
+                deepTagMDZqq=normalize(candidatejet.deepTagMDZqq,cut),
+                msd=normalize(candidatejet.msdcorr, cut),
+                genflavor=genflavor[cut],
+                weight=weight,
+            ),
+            output['in_v3'].fill(
+                dataset=dataset,
+                region=region,
+                genflavor=genflavor[cut], 
+                in_v3=normalize(candidatejet.in_v3,cut),
+                n2=normalize(candidatejet.n2b1,cut),
+                gru=normalize(candidatejet.gru,cut),
                 weight=weight,
             )
-
         for region in regions:
             fill(region)
 

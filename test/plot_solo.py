@@ -97,21 +97,31 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
 
     mc_processes = ['zqq','wqq','qcd','st','wlnu','tt']#'tttoleptonic','tttosemileptonic','tttohadronic']
     data_processes = ['SingleMuon','JetHT',]
-   
+        
     if 'signal' in regionsel:
         data = h.remove(mc_processes + ['SingleMuon'],'process')# if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
         mc = h.remove(['JetHT','SingleMuon',],'process')
         #kfactor = QCDkfactor(data,mc)
-        x.scale({'qcd':0.9},'process')
-        print('applying QCD k factor:', kfactor)
-    for var,val in vars_cut.items():
-        if var!=var_name:
-            print('integrating ',var,val[0],val[1])
-            x = x.integrate(var,slice(val[0],val[1]),overflow='none')
+    x.scale({'qcd':0.9},'process')
+    print('applying QCD k factor:', kfactor)
     for reg in regionsel:
         print('integrating ',reg)
         x = x.integrate('region',reg)
         #x.remove([p for p in h.axis('process').identifiers() if reg not in str(p)], 'region')
+    if 'vselection' in regionsel:
+        print(x.integrate('process','SingleMuon').values()[()])
+        data = np.sum(x.integrate('process','SingleMuon').values()[()])
+        ttyield = np.sum(x.integrate('process','tt').values()[()])
+        qcdyield = np.sum(x.integrate('process','qcd').values()[()])
+        wlnuyield = np.sum(x.integrate('process','wlnu').values()[()])
+        styield = np.sum(x.integrate('process','st').values()[()])
+        ttkfac = (data-qcdyield-wlnuyield-styield)/ttyield
+        x.scale({'tt':ttkfac},'process')
+        print('applying tt k factor', ttkfac)
+    for var,val in vars_cut.items():
+        if var!=var_name:
+            print('integrating ',var,val[0],val[1])
+            x = x.integrate(var,slice(val[0],val[1]),overflow='none')
     #x = x.remove(['noselection','signal'] if 'ttbar' in regionsel else ['ttbar_muoncontrol'] ,'region')
     #print(x.axis('region').identifiers())
     #x = x.sum('region')
