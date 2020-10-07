@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from coffea.nanoaod import NanoEvents
 from hbbprocessor import HbbProcessor
 from ddt_processor import DDTProcessor
-from zqq_processor_debug_Jeff import ZQQProcessor
+from zqq_processor import ZQQProcessor
 from coffea.nanoaod.methods import Candidate
 events = NanoEvents.from_file(
     #'root://cmseos.fnal.gov//store/user/jkrupa/nanopost_process/24Jul20/ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8/nano_mc_2017_9ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.root',
@@ -40,7 +40,7 @@ events = NanoEvents.from_file(
     #methods={"FatJetPFCands": Candidate}
 )
 #p = HbbProcessor(year='2017')
-p = ZQQProcessor(year='2017')
+p = ZQQProcessor(year='2017',region='signal')
 #p = DDTProcessor(year='2017')
 out = p.process(events)
 print(out)
