@@ -12,6 +12,7 @@ from coffea.nanoaod import NanoEvents
 from hbbprocessor import HbbProcessor
 from ddt_processor import DDTProcessor
 from zqq_processor import ZQQProcessor
+#from test import ZQQProcessor
 from coffea.nanoaod.methods import Candidate
 events = NanoEvents.from_file(
     #'root://cmseos.fnal.gov//store/user/jkrupa/nanopost_process/24Jul20/ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8/nano_mc_2017_9ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.root',
@@ -40,8 +41,14 @@ events = NanoEvents.from_file(
     #methods={"FatJetPFCands": Candidate}
 )
 #p = HbbProcessor(year='2017')
-p = ZQQProcessor(year='2017',region='signal')
+p = ZQQProcessor(year='2017',region='VtaggingCR')
 #p = DDTProcessor(year='2017')
+out = p.process(events)
+print(out)
+p = ZQQProcessor(year='2017',region='signal')
+out = p.process(events)
+print(out)
+p = ZQQProcessor(year='2017',region='muonCR')
 out = p.process(events)
 print(out)
 #print('ZQQProcessor',out['sumw'],out['templates'].sum('dataset','pt','msd','mu_pt','in_v3_ddt','mu_pfRelIso04_all',overflow='allnan').values()) #'in_v3_ddt','Vmatch','gruddt','mu_pt','mu_pfRelIso04_all',).values())

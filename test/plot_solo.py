@@ -101,9 +101,9 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     if 'signal' in regionsel:
         data = h.remove(mc_processes + ['SingleMuon'],'process')# if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
         mc = h.remove(['JetHT','SingleMuon',],'process')
-        #kfactor = QCDkfactor(data,mc)
-    x.scale({'qcd':0.9},'process')
-    print('applying QCD k factor:', kfactor)
+        kfactor = 0.9#QCDkfactor(data,mc)
+        x.scale({'qcd':kfactor},'process')
+        print('applying QCD k factor:', kfactor)
     for reg in regionsel:
         print('integrating ',reg)
         x = x.integrate('region',reg)
@@ -131,11 +131,12 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     xaxis = var_name
     x.axis(xaxis).label = var_label
     mc = x.remove(data_processes,'process')
-    mc.axis('process').sorting = 'integral'
+    #mc.axis('process').sorting = 'integral'
     data = x.remove(mc_processes + ['SingleMuon'] if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
     for ih,hkey in enumerate(mc.identifiers('process')):
         mc.identifiers('process')[ih].label = process_latex[hkey.name]
 
+    print(mc.axis('process').sorting)
     if plotData: 
          fig, (ax, rax) = plt.subplots(
          nrows=2,
