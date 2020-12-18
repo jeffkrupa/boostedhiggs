@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from coffea import processor, hist
-from boostedhiggs.twoProngGRU import *
+#from boostedhiggs.twoProngGRU import *
 from coffea.nanoaod.methods import collection_methods, Candidate
 collection_methods["FatJetPFCands"] = Candidate
 

@@ -38,7 +38,7 @@ events = NanoEvents.from_file(
 
     #metadata={'dataset': 'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8'},
     #metadata={'dataset': 'WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8'},
-    #methods={"FatJetPFCands": Candidate}
+    methods={"FatJetPFCands": Candidate}
 )
 #p = HbbProcessor(year='2017')
 p = ZQQProcessor(year='2017',region='VtaggingCR')
