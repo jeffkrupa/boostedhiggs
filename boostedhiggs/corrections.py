@@ -1,38 +1,45 @@
 import os
 import numpy as np
-import awkward as ak
-from coffea.util import load
-from coffea import hist, lookup_tools
+import awkward1
+import gzip
+import pickle
+from coffea.lookup_tools.lookup_base import lookup_base
 
-compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_4.coffea'))
-#compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'boostedhiggs', 'data', 'corrections_4.coffea'))
+with gzip.open(os.path.join(os.path.dirname(__file__), 'data', 'corrections.pkl.gz')) as fin:
+    compiled = pickle.load(fin)
 
 # hotfix some crazy large weights
 compiled['2017_pileupweight']._values = np.minimum(5, compiled['2017_pileupweight']._values)
 compiled['2018_pileupweight']._values = np.minimum(5, compiled['2018_pileupweight']._values)
 
 
-def _msoftdrop_weight(pt, eta):
-    gpar = np.array([1.00626, -1.06161, 0.0799900, 1.20454])
-    cpar = np.array([1.09302, -0.000150068, 3.44866e-07, -2.68100e-10, 8.67440e-14, -1.00114e-17])
-    fpar = np.array([1.27212, -0.000571640, 8.37289e-07, -5.20433e-10, 1.45375e-13, -1.50389e-17])
-    genw = gpar[0] + gpar[1]*np.power(pt*gpar[2], -gpar[3])
-    ptpow = np.power.outer(pt, np.arange(cpar.size))
-    cenweight = np.dot(ptpow, cpar)
-    forweight = np.dot(ptpow, fpar)
-    weight = np.where(np.abs(eta) < 1.3, cenweight, forweight)
-    return genw*weight
+class SoftDropWeight(lookup_base):
+    def _evaluate(self, pt, eta):
+        gpar = np.array([1.00626, -1.06161, 0.0799900, 1.20454])
+        cpar = np.array([1.09302, -0.000150068, 3.44866e-07, -2.68100e-10, 8.67440e-14, -1.00114e-17])
+        fpar = np.array([1.27212, -0.000571640, 8.37289e-07, -5.20433e-10, 1.45375e-13, -1.50389e-17])
+        genw = gpar[0] + gpar[1]*np.power(pt*gpar[2], -gpar[3])
+        ptpow = np.power.outer(pt, np.arange(cpar.size))
+        cenweight = np.dot(ptpow, cpar)
+        forweight = np.dot(ptpow, fpar)
+        weight = np.where(np.abs(eta) < 1.3, cenweight, forweight)
+        return genw*weight
+
+
+_softdrop_weight = SoftDropWeight()
 
 
 def corrected_msoftdrop(fatjets):
-    sf_flat = _msoftdrop_weight(fatjets.pt.flatten(), fatjets.eta.flatten())
-    sf_flat = np.maximum(1e-5, sf_flat)
+    sf = _softdrop_weight(fatjets.pt, fatjets.eta)
+    sf = np.maximum(1e-5, sf)
     try:
-        # old pancakes
+        # pancakes have the raw value
         dazsle_msd = fatjets.msoftdrop_raw
     except AttributeError:
+        # for nanoaod we have to work back to it
+        # TODO: this should be ak.sum(..., axis=-1) but not working
         dazsle_msd = (fatjets.subjets * (1 - fatjets.subjets.rawFactor)).sum().mass
-    return dazsle_msd * ak.JaggedArray.fromoffsets(fatjets.array.offsets, sf_flat)
+    return dazsle_msd * sf
 
 def shift(fatjets, algo, year='2017'):
     fatjets_msdcorr = corrected_msoftdrop(fatjets)
@@ -53,9 +60,7 @@ def gruddt_shift(fatjets, year='2017'):
     return compiled[f'2017_gruddt_rho_pt'](fatjets.pt, fatjets_rhocorr)
 
 def n2ddt_shift(fatjets, year='2017'):
-    fatjets_msdcorr = corrected_msoftdrop(fatjets)
-    fatjets_rhocorr = 2*np.log(fatjets_msdcorr/fatjets.pt)
-    return compiled[f'{year}_n2b1_rho_pt'](fatjets.pt, fatjets_rhocorr)
+    return compiled[f'{year}_n2ddt_rho_pt'](fatjets.qcdrho, fatjets.pt)
 
 
 def add_pileup_weight(weights, nPU, year='2017', dataset=None):
@@ -99,8 +104,6 @@ def add_singleMuTriggerWeight(weights, mu_absEta, mu_pt, year):
     weights.add('singleMuonTrigger',nom)
 
 def add_jetTriggerWeight(weights, jet_msd, jet_pt, year):
-    jet_msd = jet_msd.pad(1, clip=True).fillna(0).flatten()
-    jet_pt = jet_pt.pad(1, clip=True).fillna(0).flatten()
     nom = compiled[f'{year}_trigweight_msd_pt'](jet_msd, jet_pt)
     up = compiled[f'{year}_trigweight_msd_pt_trigweightUp'](jet_msd, jet_pt)
     down = compiled[f'{year}_trigweight_msd_pt_trigweightDown'](jet_msd, jet_pt)

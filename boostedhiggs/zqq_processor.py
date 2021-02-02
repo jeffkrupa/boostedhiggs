@@ -5,9 +5,9 @@ import awkward
 from coffea import processor, hist
 np.set_printoptions(threshold=1000)
 from uproot_methods import TLorentzVectorArray
-#from boostedhiggs.twoProngGRU import *
+from coffea.analysis_tools import Weights, PackedSelection 
 from coffea.nanoaod.methods import collection_methods, Candidate
-#collection_methods["FatJetPFCands"] = Candidate
+import awkward1 as ak 
 import coffea
 print(coffea.__version__)
 from boostedhiggs.corrections import (
@@ -124,7 +124,7 @@ class ZQQProcessor(processor.ProcessorABC):
     def process(self, events):
 
         def normalize(val, cut):
-            return val[cut].pad(1, clip=True).fillna(0).flatten()
+            return ak.to_numpy(ak.fill_none(val[cut], np.nan)) #val[cut].pad(1, clip=True).fillna(0).flatten()
 
         def fill(region, cuts, systematic=None, wmod=None):
             print('filling %s'%region)
@@ -190,20 +190,20 @@ class ZQQProcessor(processor.ProcessorABC):
 
         dataset = events.metadata['dataset']
         print('process dataset', dataset)
-        isRealData = 'genWeight' not in events.columns
+        isRealData = not hasattr(events,'genWeight')
         output = self.accumulator.identity()
         if(len(events) == 0): return output
 
-        selection = processor.PackedSelection()
-        weights = processor.Weights(len(events))
+        selection = PackedSelection()
+        weights = Weights(len(events))
 
         if not isRealData:
-            output['sumw'][dataset] += events.genWeight.sum()
+            output['sumw'][dataset] += ak.sum(events.genWeight)
 
         #######################
         if 'signal' in self._region:
             if isRealData:
-                trigger_fatjet = np.zeros(events.size, dtype='bool')
+                trigger_fatjet = np.zeros(len(events), dtype='bool')
                 for t in self._triggers[self._year]:
                     try:
                         trigger_fatjet = trigger_fatjet | events.HLT[t]
@@ -212,36 +212,39 @@ class ZQQProcessor(processor.ProcessorABC):
                         continue
 
             else:
-                trigger_fatjet = np.ones(events.size, dtype='bool')
+                trigger_fatjet = np.ones(len(events), dtype='bool')
 
             selection.add('fatjet_trigger', trigger_fatjet)
             fatjets["genMatchFull"] = VQQgenmatch(events)
             candidatejet = fatjets[:,:1]
 
-            nelectrons = (
-                ((events.Electron.pt > 10.)
+            nelectrons = ak.sum(
+                (events.Electron.pt > 10.)
                 & (abs(events.Electron.eta) < 2.5) 
-                & (events.Electron.cutBased >= events.Electron.VETO))
-            ).sum()
-            nmuons = (
-                ((events.Muon.pt > 10)
+                & (events.Electron.cutBased >= events.Electron.VETO),
+                axis = 1,
+            )
+            nmuons = ak.sum(
+                (events.Muon.pt > 10)
                 & (abs(events.Muon.eta) < 2.1)
                 & (events.Muon.pfRelIso04_all < 0.4)
-                & (events.Muon.looseId).astype(bool))
-            ).sum()
-            ntaus = (
-                ((events.Tau.pt > 20.)
+                & (events.Muon.looseId).astype(bool),
+                axis = 1,
+            )
+            ntaus = ak.sum(
+                (events.Tau.pt > 20.)
                 & (events.Tau.idDecayMode).astype(bool)
                 & (events.Tau.rawIso < 5)
-                & (abs(events.Tau.eta) < 2.3))
-            ).sum()
+                & (abs(events.Tau.eta) < 2.3),
+                axis = 1,
+            )
 
-            cuts = { "pt" : (candidatejet.pt > 525).any(),
-                     "eta" : (abs(candidatejet.eta) < 2.5).any(),
-                     "msdcorr" : (candidatejet.msdcorr > 40).any(),
-                     "rho"     : ((candidatejet.rhocorr > -5.5) &(candidatejet.rhocorr < -2.)).any(),
-                     "jetid"   : (candidatejet.isTight).any(), 
-                     "VQQgenmatch" : (fatjets.genMatchFull).any(), 
+            cuts = { "pt" : (candidatejet.pt > 525),
+                     "eta" : (abs(candidatejet.eta) < 2.5),
+                     "msdcorr" : (candidatejet.msdcorr > 40),
+                     "rho"     : ((candidatejet.rhocorr > -5.5) &(candidatejet.rhocorr < -2.)),
+                     "jetid"   : (candidatejet.isTight), 
+                     "VQQgenmatch" : (fatjets.genMatchFull), 
                      "noelectron" : (nelectrons == 0),
                      "nomuon"     : (nmuons == 0),
                      "notau"      : (ntaus == 0),
@@ -251,13 +254,13 @@ class ZQQProcessor(processor.ProcessorABC):
                 selection.add(name, cut)
 
             if isRealData:
-                genflavor = candidatejet.pt.zeros_like().pad(1, clip=True).fillna(-1).flatten()
+                genflavor = 0 #candidatejet.pt.zeros_like().pad(1, clip=True).fillna(-1).flatten()
             if not isRealData: 
                 weights.add('genweight', events.genWeight)
                 add_pileup_weight(weights, events.Pileup.nPU, self._year, dataset)
                 add_jetTriggerWeight(weights, candidatejet.msdcorr, candidatejet.pt, self._year)
-                bosons = getBosons(events)
-                genBosonPt = bosons.pt.pad(1, clip=True).fillna(0)
+                bosons = getBosons(events.GenPart)
+                genBosonPt = ak.fill_none(ak.firsts(bosons.pt), 0)
                 add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
                 genflavor = matchedBosonFlavor(candidatejet, bosons).pad(1, clip=True).fillna(-1).flatten()
 
