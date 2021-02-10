@@ -4,10 +4,12 @@ import awkward1
 import gzip
 import pickle
 from coffea.lookup_tools.lookup_base import lookup_base
+from coffea.util import load, save
 
-with gzip.open(os.path.join(os.path.dirname(__file__), 'data', 'corrections.pkl.gz')) as fin:
-    compiled = pickle.load(fin)
-
+compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_4.coffea'))
+#with gzip.open(os.path.join(os.path.dirname(__file__), 'data', 'corrections.pkl.gz')) as fin:
+#    compiled = pickle.load(fin)
+#print(compiled)
 # hotfix some crazy large weights
 compiled['2017_pileupweight']._values = np.minimum(5, compiled['2017_pileupweight']._values)
 compiled['2018_pileupweight']._values = np.minimum(5, compiled['2018_pileupweight']._values)

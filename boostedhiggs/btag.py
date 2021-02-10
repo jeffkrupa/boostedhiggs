@@ -16,7 +16,7 @@ class BTagEfficiency(processor.ProcessorABC):
             'medium': 0.6321,
         },
         '2017': {
-            'medium': 0.4941,
+            'medium': 0.8838,
         },
         '2018': {
             'medium': 0.4184,
