@@ -3,7 +3,7 @@
 #from twoProngGRU import *
 #from boostedhiggs import HbbProcessor, BTagEfficiency
 from coffea.nanoevents import NanoAODSchema, NanoEventsFactory
-from ddt_processor import DDTProcessor
+#from ddt_processor import DDTProcessor
 from zqq_processor import ZQQProcessor
 from coffea.util import save, load
 #from test import ZQQProcessor
@@ -13,11 +13,10 @@ filename="test/nano_mc_2017_1TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root"
 f = uproot.open(filename)#, xrootd_handler=uproot.MultithreadedXRootDSource)
 events = NanoEventsFactory.from_root(
     filename, 
-    entry_stop=100000,
+    #entry_stop=100000,
     metadata={'dataset':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'},
     schemaclass=NanoAODSchema,
 ).events()
-print(events.fields)
 p = ZQQProcessor(year='2017',region='signal')
 out = p.process(events)
 print(out)

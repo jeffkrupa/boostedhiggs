@@ -6,9 +6,9 @@ from coffea import processor, hist
 np.set_printoptions(threshold=1000)
 from uproot3_methods import TLorentzVectorArray
 from coffea.analysis_tools import Weights, PackedSelection 
-from coffea.nanoaod.methods import collection_methods, Candidate
+#from coffea.nanoaod.methods import collection_methods, Candidate
 from coffea.nanoevents.methods import vector
-import awkward1 as ak 
+import awkward as ak 
 import coffea
 from boostedhiggs.btag import BTagEfficiency, BTagCorrector
 from boostedhiggs.corrections import (
@@ -30,6 +30,10 @@ ak.behavior.update(vector.behavior)
 
 def TTsemileptonicmatch(events):
 
+    dataset = events.metadata['dataset']
+    if 'TTToSemiLeptonic' not in dataset: 
+        return np.zeros(len(events.FatJet.pt),dtype=bool)
+
     child = events.GenPart[(abs(events.GenPart.pdgId) == 24) & events.GenPart.hasFlags(["isLastCopy","fromHardProcess"])].children
     fatjet = ak.firsts(events.FatJet)
     n_matched_quarks = np.zeros(len(fatjet))
@@ -37,7 +41,7 @@ def TTsemileptonicmatch(events):
     for ii in [0,1]:
         for jj in [0,1]:
             n_matched_quarks = n_matched_quarks + ak.fill_none( (fatjet.delta_r2(child[:,ii,jj]) < 0.8**2) & (abs(child[:,ii,jj].pdgId) < 6), 0. )
-   
+    print(n_matched_quarks) 
     return n_matched_quarks
 
 def VQQgenmatch(events):
@@ -122,8 +126,8 @@ class ZQQProcessor(processor.ProcessorABC):
                 #hist.Cat('systematic', 'Systematic'),
                 hist.Bin('pt', r'Jet $p_{T}$ [GeV]', 25,200,1000),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
                 hist.Bin('msd', r'Jet $m_{sd}$', 23, 40, 300),
-                hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-2,0,2]),
-                hist.Bin('n2ddt', 'N$_2^{DDT}$ value', [-2,0,2]),
+                hist.Bin('hadW', r'N daughters matched to hadronic W', [-0.5,0.5,1.5,2.5]),#hist.Bin('gruddt', 'GRU$^{DDT}$ value',[-2,0,2]),
+                #hist.Bin('n2ddt', 'N$_2^{DDT}$ value', [-2,0,2]),
                 hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
             ),
             'cutflow_signal' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
@@ -150,9 +154,10 @@ class ZQQProcessor(processor.ProcessorABC):
                 region=region,
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(candidatejet.msdcorr, cut),
-                n2ddt=normalize(candidatejet.n2ddt, cut),
-                gruddt=normalize(candidatejet.gruddt, cut),
-                in_v3_ddt=normalize(candidatejet.in_v3_ddt_90pctl, cut),
+                #n2ddt=normalize(candidatejet.n2ddt, cut),
+                #gruddt=normalize(candidatejet.gruddt, cut),
+                in_v3_ddt=normalize(candidatejet.in_v3_ddt, cut),
+                hadW=normalize(candidatejet.nmatcheddau,cut),
                 weight=weight,
             ),
             output['event'].fill(
@@ -181,11 +186,12 @@ class ZQQProcessor(processor.ProcessorABC):
                 gru=normalize(candidatejet.gru,cut),
                 weight=weight,
             ),
-            if 'muonCR' in dataset:
+            if 'muonCR' in dataset or 'VtaggingCR' in dataset:
                 output['muon'].fill(
                     dataset=dataset,
                     region=region,
                     mu_pt=normalize(candidatemuon.pt,cut),
+                    mu_eta=normalize(candidatemuon.eta,cut),
                     mu_pfRelIso04_all=normalize(candidatemuon.pfRelIso04_all,cut),
                     weight=weight,
             ),
@@ -201,7 +207,7 @@ class ZQQProcessor(processor.ProcessorABC):
         fatjets['in_v3_ddt'] = IN.v3 - shift(fatjets,algo='inddt',year=self._year)
         fatjets['in_v3_ddt_90pctl'] = IN.v3 - shift(fatjets,algo='inddt90pctl',year=self._year)
         fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
-
+        fatjets['nmatcheddau'] = TTsemileptonicmatch(events)
         dataset = events.metadata['dataset']
         print('process dataset', dataset)
         isRealData = not hasattr(events,'genWeight')
@@ -298,7 +304,7 @@ class ZQQProcessor(processor.ProcessorABC):
     
     
             candidatejet = ak.firsts(fatjets)
-            candidatemuon = ak.firsts(events.Muon)
+            candidatemuon = events.Muon[:,:5]
 
 
             jets = events.Jet[
@@ -332,16 +338,17 @@ class ZQQProcessor(processor.ProcessorABC):
                 axis = 1,
             )
 
+
             cuts = { "muon_trigger"       : trigger_muon,
                      "jet_pt"             : (candidatejet.pt > 525),
                      "jet_eta"            : (abs(candidatejet.eta) < 2.5),
                      "jet_msd"            : (candidatejet.msdcorr > 40),
                      "jet_rho"            : ((candidatejet.qcdrho > -5.5) & (candidatejet.qcdrho < -2.)),
-                     "mu_pt"              : (candidatemuon.pt>55),
-                     "mu_eta"             : (abs(candidatemuon.eta)<2.1), 
-                     "mu_IDLoose"         : (candidatemuon.looseId),
-                     "mu_isolationTight"  : (candidatemuon.pfRelIso04_all < 0.15),
-                     "muonDphiAK8"        : (abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3),
+                     "mu_pt"              : ak.any(candidatemuon.pt>55,axis=1),
+                     "mu_eta"             : ak.any(abs(candidatemuon.eta)<2.1,axis=1), 
+                     "mu_IDLoose"         : ak.any(candidatemuon.looseId,axis=1),
+                     "mu_isolationTight"  : ak.any(candidatemuon.pfRelIso04_all < 0.15,axis=1),
+                     "muonDphiAK8"        : ak.any(abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,axis=1),
                      "ak4btagMedium08"    : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']), #(ak4_away.btagCSVV2.max() > 0.8838),
                      "noelectron"         : (nelectrons==0), 
                      "onemuon"            : (nmuons==1),
@@ -386,19 +393,10 @@ class ZQQProcessor(processor.ProcessorABC):
                 & (abs(events.Jet.eta) < 2.4))
             ][:,:4]
 
-            #muon_ak8_pair = candidatemuon.cross(candidatejet,nested=True) 
-            #muon_ak4_pair = jets.cross(candidatemuon,nested=True)
- 
-            #ak4_ak8_pair = jets.cross(candidatejet, nested=True)
-            #dr_ak4_ak8 = abs(ak4_ak8_pair.i0.delta_r(ak4_ak8_pair.i1))
-            #dr_muon_ak4 = abs(muon_ak4_pair.i0.delta_r(muon_ak4_pair.i1))
-            #ak4_away = jets[((dr_ak4_ak8 > 0.8).all() & (dr_muon_ak4 > 0.3).all())]
             dr_ak4_ak8 = jets.delta_r(candidatejet)
             dr_ak4_muon = jets.delta_r(candidatemuon)
 
-            print(dr_ak4_ak8, dr_ak4_muon)
             ak4_away = jets[(dr_ak4_ak8 > 0.8) & (dr_ak4_muon > 0.8)]
-            print(ak4_away)
             mu_p4 = ak.zip(
                 { 
                     "pt"   : ak.fill_none(candidatemuon.pt,0),
@@ -415,7 +413,8 @@ class ZQQProcessor(processor.ProcessorABC):
                     "eta"  : ak.from_iter([[v] for v in np.zeros(len(events))]),
                     "phi"  : ak.from_iter([[v] for v in events.MET.phi]),
                     "mass" : ak.from_iter([[v] for v in np.zeros(len(events))]),
-                }
+                },
+                with_name="PtEtaPhiMLorentzVector"
             )
 
             Wleptoniccandidate = mu_p4 + met_p4 
@@ -447,26 +446,26 @@ class ZQQProcessor(processor.ProcessorABC):
             )
 
             cuts = {
-            "muon_trigger"     : trigger_muon,
-            "jet_pt"           : (candidatejet.pt > 200),
-            "jet_eta"          : (abs(candidatejet.eta) < 2.5),
-            "jet_msd"          : (candidatejet.msdcorr > 40),
-            "mu_pt"            : (candidatemuon.pt>53),
-            "mu_eta"           : (abs(candidatemuon.eta)<2.1),
-            "mu_IDTight"       : (candidatemuon.tightId),
-            "mu_isolationTight": (candidatemuon.pfRelIso04_all < 0.15),
-            "muonDphiAK8"      : (abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3),
-            "ak4btagMedium08"  : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']),
-            "leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
-            "MET"              : (events.MET.pt > 40.),
-            "noelectron"       : (nelectrons==0),
-            "one_tightMuon"    : (n_tight_muon==1),
-            "one_looseMuon"    : (n_loose_muon==1),
-            "notau"            : (ntaus==0),
+                "muon_trigger"     : trigger_muon,
+                "jet_pt"           : (candidatejet.pt > 200),
+                "jet_eta"          : (abs(candidatejet.eta) < 2.5),
+                "jet_msd"          : (candidatejet.msdcorr > 40),
+                "mu_pt"            : candidatemuon.pt>53,
+                "mu_eta"           : (abs(candidatemuon.eta) < 2.1),
+                "mu_IDTight"       : candidatemuon.tightId,
+                "mu_isolationTight": (candidatemuon.pfRelIso04_all < 0.15),
+                "muonDphiAK8"      : abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,
+                "ak4btagMedium08"  : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']),
+                "leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
+                "MET"              : (events.MET.pt > 40.),
+                "noelectron"       : (nelectrons==0),
+                "one_tightMuon"    : (n_tight_muon==1),
+                "one_looseMuon"    : (n_loose_muon==1),
+                "notau"            : (ntaus==0),
             }
     
             for name, cut in cuts.items(): 
-                selection.add(name, cut)
+                print(name, cut); selection.add(name, cut)
             #weights.add('metfilter', events.Flag.METFilters) 
             if isRealData:
                 genflavor = candidatejet.pt.zeros_like().pad(1, clip=True).fillna(-1).flatten()

@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import awkward1
+import awkward
 import gzip
 import pickle
 from coffea.lookup_tools.lookup_base import lookup_base
