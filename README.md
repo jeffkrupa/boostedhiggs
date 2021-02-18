@@ -5,10 +5,10 @@
 bash ~/nobackup/miniconda.sh -b -p miniconda/
 source miniconda/bin/activate
 conda create -n env python=3.6
-pip install coffea==0.6.38
+pip install coffea --upgrade
 conda install -c conda-forge xrootd
 
-git clone git@github.com:jeffkrupa-/boostedhiggs.git -b cleanup
+git clone https://github.com/jeffkrupa/boostedhiggs.git -b ak1
 
 cd boostedhiggs
 
