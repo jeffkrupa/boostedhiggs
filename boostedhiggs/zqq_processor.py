@@ -1,15 +1,17 @@
 import logging
 from functools import partial
 import numpy as np
-import awkward
 from coffea import processor, hist
 np.set_printoptions(threshold=1000)
-from uproot3_methods import TLorentzVectorArray
+#from uproot3_methods import TLorentzVectorArray
 from coffea.analysis_tools import Weights, PackedSelection 
 #from coffea.nanoaod.methods import collection_methods, Candidate
-from coffea.nanoevents.methods import vector
-import awkward as ak 
 import coffea
+print('coffea==',coffea.__version__)
+import awkward as ak 
+print('awkward==',ak.__version__)
+#from coffea.nanoevents.methods import vector
+#import coffea
 from boostedhiggs.btag import BTagEfficiency, BTagCorrector
 from boostedhiggs.corrections import (
     corrected_msoftdrop,
@@ -26,7 +28,7 @@ from boostedhiggs.common import (
     bosonFlavor,
 )
 
-ak.behavior.update(vector.behavior)
+#ak.behavior.update(vector.behavior)
 
 def TTsemileptonicmatch(events):
 
@@ -258,16 +260,16 @@ class ZQQProcessor(processor.ProcessorABC):
                 axis = 1,
             )
 
-            cuts = { "fatjet_trigger" : trigger_fatjet,
-                     "pt" : candidatejet.pt > 525,
-                     "eta" : (abs(candidatejet.eta) < 2.5),
-                     "msdcorr" : (candidatejet.msdcorr > 40),
-                     "rho"     : ((candidatejet.qcdrho > -5.5) &(candidatejet.qcdrho < -2.)),
-                     "jetid"   : (candidatejet.isTight), 
-                     "VQQgenmatch" : (candidatejet.genMatchFull), 
-                     "noelectron" : (nelectrons == 0),
-                     "nomuon"     : (nmuons == 0),
-                     "notau"      : (ntaus == 0),
+            cuts = { "S_fatjet_trigger" : trigger_fatjet,
+                     "S_pt" : candidatejet.pt > 525,
+                     "S_eta" : (abs(candidatejet.eta) < 2.5),
+                     "S_msdcorr" : (candidatejet.msdcorr > 40),
+                     "S_rho"     : ((candidatejet.qcdrho > -5.5) &(candidatejet.qcdrho < -2.)),
+                     "S_jetid"   : (candidatejet.isTight), 
+                     "S_VQQgenmatch" : (candidatejet.genMatchFull), 
+                     "S_noelectron" : (nelectrons == 0),
+                     "S_nomuon"     : (nmuons == 0),
+                     "S_notau"      : (ntaus == 0),
                    }
 
             for name, cut in cuts.items():
@@ -339,20 +341,20 @@ class ZQQProcessor(processor.ProcessorABC):
             )
 
 
-            cuts = { "muon_trigger"       : trigger_muon,
-                     "jet_pt"             : (candidatejet.pt > 525),
-                     "jet_eta"            : (abs(candidatejet.eta) < 2.5),
-                     "jet_msd"            : (candidatejet.msdcorr > 40),
-                     "jet_rho"            : ((candidatejet.qcdrho > -5.5) & (candidatejet.qcdrho < -2.)),
-                     "mu_pt"              : ak.any(candidatemuon.pt>55,axis=1),
-                     "mu_eta"             : ak.any(abs(candidatemuon.eta)<2.1,axis=1), 
-                     "mu_IDLoose"         : ak.any(candidatemuon.looseId,axis=1),
-                     "mu_isolationTight"  : ak.any(candidatemuon.pfRelIso04_all < 0.15,axis=1),
-                     "muonDphiAK8"        : ak.any(abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,axis=1),
-                     "ak4btagMedium08"    : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']), #(ak4_away.btagCSVV2.max() > 0.8838),
-                     "noelectron"         : (nelectrons==0), 
-                     "onemuon"            : (nmuons==1),
-                     "notau"              : (ntaus==0),
+            cuts = { "CR1_muon_trigger"       : trigger_muon,
+                     "CR1_jet_pt"             : (candidatejet.pt > 525),
+                     "CR1_jet_eta"            : (abs(candidatejet.eta) < 2.5),
+                     "CR1_jet_msd"            : (candidatejet.msdcorr > 40),
+                     "CR1_jet_rho"            : ((candidatejet.qcdrho > -5.5) & (candidatejet.qcdrho < -2.)),
+                     "CR1_mu_pt"              : ak.any(candidatemuon.pt>55,axis=1),
+                     "CR1_mu_eta"             : ak.any(abs(candidatemuon.eta)<2.1,axis=1), 
+                     "CR1_mu_IDLoose"         : ak.any(candidatemuon.looseId,axis=1),
+                     "CR1_mu_isolationTight"  : ak.any(candidatemuon.pfRelIso04_all < 0.15,axis=1),
+                     "CR1_muonDphiAK8"        : ak.any(abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,axis=1),
+                     "CR1_ak4btagMedium08"    : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']), #(ak4_away.btagCSVV2.max() > 0.8838),
+                     "CR1_noelectron"         : (nelectrons==0), 
+                     "CR1_onemuon"            : (nmuons==1),
+                     "CR1_notau"              : (ntaus==0),
                    }
             for name, cut in cuts.items(): 
                 selection.add(name, cut)
@@ -446,22 +448,22 @@ class ZQQProcessor(processor.ProcessorABC):
             )
 
             cuts = {
-                "muon_trigger"     : trigger_muon,
-                "jet_pt"           : (candidatejet.pt > 200),
-                "jet_eta"          : (abs(candidatejet.eta) < 2.5),
-                "jet_msd"          : (candidatejet.msdcorr > 40),
-                "mu_pt"            : candidatemuon.pt>53,
-                "mu_eta"           : (abs(candidatemuon.eta) < 2.1),
-                "mu_IDTight"       : candidatemuon.tightId,
-                "mu_isolationTight": (candidatemuon.pfRelIso04_all < 0.15),
-                "muonDphiAK8"      : abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,
-                "ak4btagMedium08"  : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']),
-                "leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
-                "MET"              : (events.MET.pt > 40.),
-                "noelectron"       : (nelectrons==0),
-                "one_tightMuon"    : (n_tight_muon==1),
-                "one_looseMuon"    : (n_loose_muon==1),
-                "notau"            : (ntaus==0),
+                "CR2_muon_trigger"     : trigger_muon,
+                "CR2_jet_pt"           : (candidatejet.pt > 200),
+                "CR2_jet_eta"          : (abs(candidatejet.eta) < 2.5),
+                "CR2_jet_msd"          : (candidatejet.msdcorr > 40),
+                "CR2_mu_pt"            : candidatemuon.pt>53,
+                "CR2_mu_eta"           : (abs(candidatemuon.eta) < 2.1),
+                "CR2_mu_IDTight"       : candidatemuon.tightId,
+                "CR2_mu_isolationTight": (candidatemuon.pfRelIso04_all < 0.15),
+                "CR2_muonDphiAK8"      : abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,
+                "CR2_ak4btagMedium08"  : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']),
+                "CR2_leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
+                "CR2_MET"              : (events.MET.pt > 40.),
+                "CR2_noelectron"       : (nelectrons==0),
+                "CR2_one_tightMuon"    : (n_tight_muon==1),
+                "CR2_one_looseMuon"    : (n_loose_muon==1),
+                "CR2_notau"            : (ntaus==0),
             }
     
             for name, cut in cuts.items(): 

@@ -4,15 +4,15 @@ import json
 
 eosbase = "root://cmseos.fnal.gov/"
 #eosdir = "/store/group/lpcbacon/pancakes/02/"
-eosdir = "/store/user/lpcbacon/jkrupa/nanopost_process/"
+eosdir = "/store/user/lpcpfnano/jkrupa/"
 
 dirlist = [
     #["2017/UL/", "2017UL",["Run20","hww_2017mc","hadd","tmp"]],
     #["2017/tmp-VJets-withPF", "2017VJets",[]],#["tmp-VJets-withPF"]],
     #["2018/UL", "2018UL",["200211_180642"]],
     #["2017/UL/hadd", "2017ULhadd",["_Run2017B"]]
-    ["6Aug20","2017",[]], 
-    ["6Aug20_v2","2017",[]]   
+    ["nanopost_process","2017",[]], 
+    #["6Aug20_v2","2017",[]]   
 ]
 
 def eos_rec_search(startdir,suffix,skiplist,dirs):

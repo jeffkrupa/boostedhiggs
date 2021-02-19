@@ -24,7 +24,7 @@ files_per_job = int(args.settings[2])
 
 loc_base = os.environ['PWD']
 logdir = label
-outdir = '/store/user/jkrupa/coffea/'+logdir+'/'
+outdir = '/store/user/jkrupa/coffea_ak1/'+logdir+'/'
 
 samplelist = {
         'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8':'2017',
@@ -72,7 +72,8 @@ samplelist = {
 os.chdir('..')
 os.system('xrdcp -f test/%s root://cmseos.fnal.gov//store/user/jkrupa/'%script)
 if (len(args.settings) is 4):
-    os.system('tar -vzcf dazsle_coffea.tgz . --exclude="*.root" --exclude="*.pdf" --exclude="*.pyc" --exclude="nobackup" --exclude="nobackup1" --exclude=tmp --exclude="*.tgz" --exclude="*std*" --exclude="*sum*" --exclude-vcs --exclude-caches-all --exclude="*.condor" --exclude="*.sh" --exclude=./tf/ --exclude="*tgz" --exclude=./coffeaenv --exclude=tf.tar.gz')
+    #os.system('tar -vzcf dazsle_coffea.tgz . --exclude="*.root" --exclude="*.pdf" --exclude="*.pyc" --exclude="nobackup" --exclude="nobackup1" --exclude=tmp --exclude="*.tgz" --exclude="*std*" --exclude="*sum*" --exclude-vcs --exclude-caches-all --exclude="*.condor" --exclude="*.sh" --exclude=./tf/ --exclude="*tgz" ')
+    os.system('tar -zcf dazsle_coffea.tgz . --exclude="*.root" --exclude="*.pdf" --exclude="*.pyc" --exclude=tmp --exclude="*.tgz" --exclude-vcs --exclude-caches-all')
     os.system('xrdcp -f dazsle_coffea.tgz root://cmseos.fnal.gov//store/user/jkrupa/dazsle_coffea.tgz')
 os.chdir(loc_base)
 

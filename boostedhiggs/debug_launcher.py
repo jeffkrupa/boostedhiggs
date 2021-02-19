@@ -17,7 +17,7 @@ events = NanoEventsFactory.from_root(
     metadata={'dataset':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'},
     schemaclass=NanoAODSchema,
 ).events()
-p = ZQQProcessor(year='2017',region='signal')
+p = ZQQProcessor(year='2017',region=['signal','muonCR','VtaggingCR'])
 out = p.process(events)
 print(out)
 p = ZQQProcessor(year='2017',region='muonCR')

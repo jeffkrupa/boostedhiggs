@@ -2,9 +2,9 @@ import os
 import numpy as np
 from coffea import processor, util, hist
 import json
-from coffea.nanoaod.methods import Candidate
-
-from coffea.nanoaod import NanoEvents
+#from coffea.nanoaod.methods import Candidate
+from coffea.nanoevents import BaseSchema, NanoAODSchema, NanoEventsFactory
+#from coffea.nanoaod import NanoEvents
 from boostedhiggs.zqq_processor import ZQQProcessor
 import argparse
 
@@ -24,20 +24,11 @@ def run_processor(year,selsamples,starti,endi,outname):
         files.update(newfiles)
 
     selfiles = {k: files[k][starti:endi] for k in selsamples}
-    args = {'nano': True, 'workers': 1, 'savemetrics': True}
+    print(selfiles)
+    args = { "schema" : NanoAODSchema}  #{'nano': True, 'workers': 1, 'savemetrics': True}
 
     signal                 = ZQQProcessor(year=year,region=['signal','muonCR','VtaggingCR'])
     out, metrics           = processor.run_uproot_job(selfiles, 'Events', signal, processor.iterative_executor, args)
-
-    #muonCR                 = ZQQProcessor(year=year,region='muonCR')
-    #muonCRout, metrics     = processor.run_uproot_job(selfiles, 'Events', muonCR, processor.iterative_executor, args)
-    #out = addCoffea(out, muonCRout)
-
-    #VtaggingCR             = ZQQProcessor(year=year,region='VtaggingCR')
-    #VtaggingCRout, metrics = processor.run_uproot_job(selfiles, 'Events', VtaggingCR, processor.iterative_executor, args)
-
-    #out = addCoffea(out, VtaggingCRout)
-
     util.save(out, '%s.coffea'%outname)
 
 

@@ -12,20 +12,23 @@
 #_____ setup the environment ____________________________________________
 #
 
-source /cvmfs/cms.cern.ch/cmsset_default.sh
+#source /cvmfs/cms.cern.ch/cmsset_default.sh
 
 #get setup coffea area
 xrdcp root://cmseos.fnal.gov//store/user/jkrupa/dazsle_coffea.tgz ./dazsle_coffea.tgz
 tar -zxf dazsle_coffea.tgz
 #pip install --editable .
 
+rm -rf coffeaenv
+tar -zxf coffeaenv.tar.gz
 
-xrdcp -f root://cmseos.fnal.gov//store/user/jkrupa/tf.tar.gz ./tf.tar.gz
-ls -ltrh boostedhiggs 
+#xrdcp -f root://cmseos.fnal.gov//store/user/jkrupa/tf.tar.gz ./tf.tar.gz
+#ls -ltrh boostedhiggs 
 #tar -zxf coffeaenv.tar.gz
-mkdir tf
-tar -xf tf.tar.gz -C tf
-source tf/bin/activate
+#mkdir tf
+#tar -xf tf.tar.gz -C tf
+#source tf/bin/activate
+source coffeaenv/bin/activate
 
 export PYTHONPATH=${PWD}:${PYTHONPATH}
 
