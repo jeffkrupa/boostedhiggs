@@ -27,8 +27,8 @@ def run_processor(year,selsamples,starti,endi,outname):
     print(selfiles)
     args = { "schema" : NanoAODSchema}  #{'nano': True, 'workers': 1, 'savemetrics': True}
 
-    signal                 = ZQQProcessor(year=year,region=['signal','muonCR','VtaggingCR'])
-    out, metrics           = processor.run_uproot_job(selfiles, 'Events', signal, processor.iterative_executor, args)
+    signal        = ZQQProcessor(year=year,region=['signal','muonCR','VtaggingCR'])
+    out           = processor.run_uproot_job(selfiles, 'Events', signal, processor.iterative_executor, args)
     util.save(out, '%s.coffea'%outname)
 
 

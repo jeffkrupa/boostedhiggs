@@ -216,7 +216,7 @@ class ZQQProcessor(processor.ProcessorABC):
         output = self.accumulator.identity()
         if(len(events) == 0): return output
 
-        selection = PackedSelection()
+        selection = PackedSelection('uint64')
         weights = Weights(len(events))
 
         if not isRealData:
