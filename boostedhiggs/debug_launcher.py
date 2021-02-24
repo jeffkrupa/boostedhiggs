@@ -9,15 +9,20 @@ from coffea.util import save, load
 #from test import ZQQProcessor
 import uproot
 
+#filename="root://cmseos.fnal.gov//store/group/lpcpfnano/jkrupa/nanopost_process//WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8/nano_mc_2017_9WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.root" #
 filename="test/nano_mc_2017_1TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root"
+#filename="root://cmseos.fnal.gov//store/group/lpcpfnano/jkrupa/nanopost_process/SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1/nano_data_2017_9SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1.root"
 f = uproot.open(filename)#, xrootd_handler=uproot.MultithreadedXRootDSource)
 events = NanoEventsFactory.from_root(
     filename, 
     #entry_stop=100000,
-    metadata={'dataset':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8'},
+    metadata={'dataset':'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root'},
     schemaclass=NanoAODSchema,
 ).events()
 p = ZQQProcessor(year='2017',region=['signal','muonCR','VtaggingCR'])
+out = p.process(events)
+print(out)
+p = ZQQProcessor(year='2017',region='signal')
 out = p.process(events)
 print(out)
 p = ZQQProcessor(year='2017',region='muonCR')

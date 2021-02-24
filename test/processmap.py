@@ -4,9 +4,8 @@ from coffea import hist
 process = hist.Cat("process", "Process", sorting='placement')
 process_cat = "dataset"
 process_map = OrderedDict()
-
 process_map["qcd"] = [
-    'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
+    #'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
     'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
     'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
     'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
@@ -20,9 +19,14 @@ process_map["st"] = [
     'ST_tW_antitop_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8',
     'ST_tW_top_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8',
 ]
+'''process_map["ttothers"] = [
+    'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
+    #'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+    'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
+]'''
 process_map["tt"] = [
     'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
-    'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+    #'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
     'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
 ]
 process_map["wlnu"] = [
@@ -55,10 +59,14 @@ process_map["zll"] = [
     'DYJetsToLL_M-50_HT-800to1200_TuneCP5_13TeV-madgraphMLM-pythia8',
 ]
 process_map["JetHT"] = [
-    'JetHT_pancakes-02_Run2017C-09Aug2019_UL2017-v1',
-    'JetHT_pancakes-02_Run2017D-09Aug2019_UL2017-v1',
-    'JetHT_pancakes-02_Run2017E-09Aug2019_UL2017-v1',
-    'JetHT_pancakes-02_Run2017F-09Aug2019_UL2017-v1',
+    'JetHT_pancakes-02_Run2017C-31Mar2018-v1',
+    'JetHT_pancakes-02_Run2017D-31Mar2018-v1',
+    'JetHT_pancakes-02_Run2017E-31Mar2018-v1',
+    'JetHT_pancakes-02_Run2017F-31Mar2018-v1',
+    #'JetHT_pancakes-02_Run2017C-09Aug2019_UL2017-v1',
+    #'JetHT_pancakes-02_Run2017D-09Aug2019_UL2017-v1',
+    #'JetHT_pancakes-02_Run2017E-09Aug2019_UL2017-v1',
+    #'JetHT_pancakes-02_Run2017F-09Aug2019_UL2017-v1',
 ]
 
 process_map["SingleMuon"] = [
@@ -91,14 +99,14 @@ process_map["tttoleptonic"] = [
     'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
 ]
 
-process_map["tttosemileptonic"] = [
-    'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
-]
 
 process_map["tttohadronic"] = [
     'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
 ]
 '''
+process_map["tttosemileptonic"] = [
+    'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+]
 process_map["vv"] = [
     'WW_TuneCP5_13TeV-pythia8',
     'WZ_TuneCP5_13TeV-pythia8',

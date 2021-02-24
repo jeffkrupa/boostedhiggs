@@ -87,7 +87,8 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     #printyield(h,['zqq','wqq'],['qcd'],'n2ddt')
     #printyield(h,['zqq','wqq'],['qcd'],'in_v3_ddt')
     #printyield(h,['zqq','wqq'],['qcd'],'gruddt')
-    exceptions = ['process', var_name]
+    exceptions = ['process', var_name] 
+    if 'VtaggingCR' in regionsel: exceptions.append('hadW')
     for var,val in vars_cut.items():
         exceptions.append(var)
     if (regionsel is not ''):
@@ -95,28 +96,30 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     x = h.sum(*[ax for ax in h.axes() if ax.name not in exceptions],overflow='allnan')
     mc = h.remove(['JetHT','SingleMuon',],'process')
 
-    mc_processes = ['zqq','wqq','qcd','st','wlnu','tt']#'tttoleptonic','tttosemileptonic','tttohadronic']
+    mc_processes = ['zqq','wqq','qcd','st','wlnu','tt','tttoleptonic','tttosemileptonic','tttohadronic']
     data_processes = ['SingleMuon','JetHT',]
         
-    if 'signal' in regionsel:
-        data = h.remove(mc_processes + ['SingleMuon'],'process')# if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
-        mc = h.remove(['JetHT','SingleMuon',],'process')
-        kfactor = 0.9#QCDkfactor(data,mc)
-        x.scale({'qcd':kfactor},'process')
-        print('applying QCD k factor:', kfactor)
     for reg in regionsel:
         print('integrating ',reg)
         x = x.integrate('region',reg)
         #x.remove([p for p in h.axis('process').identifiers() if reg not in str(p)], 'region')
-    if 'vselection' in regionsel:
+    if 'signal' in regionsel:
+        data = h.remove(mc_processes + ['SingleMuon'],'process')# if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
+        mc = h.remove(['JetHT','SingleMuon',],'process')
+        kfactor = QCDkfactor(data,mc)
+        x.scale({'qcd':kfactor},'process')
+        print('applying QCD k factor:', kfactor)
+    else: #if 'VtaggingCR' in regionsel:
         print(x.integrate('process','SingleMuon').values()[()])
         data = np.sum(x.integrate('process','SingleMuon').values()[()])
         ttyield = np.sum(x.integrate('process','tt').values()[()])
-        qcdyield = np.sum(x.integrate('process','qcd').values()[()])
+        ttyield += np.sum(x.integrate('process','tttosemileptonic').values()[()])
+        qcdyield = np.sum(x.integrate('process',['qcd']).values()[()]) #_ht500to700','qcd_ht700to1000','qcd_ht1000to1500','qcd_ht1500to200','qcd_ht2000toinf']).values()[()])
         wlnuyield = np.sum(x.integrate('process','wlnu').values()[()])
         styield = np.sum(x.integrate('process','st').values()[()])
         ttkfac = (data-qcdyield-wlnuyield-styield)/ttyield
         x.scale({'tt':ttkfac},'process')
+        #mc.scale({'tttosemileptonic':ttkfac},'process')
         print('applying tt k factor', ttkfac)
     for var,val in vars_cut.items():
         if var!=var_name:
@@ -131,12 +134,34 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
     xaxis = var_name
     x.axis(xaxis).label = var_label
     mc = x.remove(data_processes,'process')
-    #mc.axis('process').sorting = 'integral'
+    mc.axis('process').sorting = 'integral'
     data = x.remove(mc_processes + ['SingleMuon'] if 'signal' in regionsel else mc_processes + ['JetHT'],'process')
     for ih,hkey in enumerate(mc.identifiers('process')):
         mc.identifiers('process')[ih].label = process_latex[hkey.name]
 
-    print(mc.axis('process').sorting)
+    processname = "process"
+    print(mc.axis('process').identifiers()) 
+    if args.hadWmatch:
+        processname="separatedprocess"
+        data = data.sum('hadW',overflow='allnan')
+        mc.scale({'tttosemileptonic':ttkfac},'process')
+        oldprocess=("process","hadW")
+        newprocesscat = hist.Cat(processname , processname, sorting='placement')
+        
+        mapping = {"st" : ("st",slice(-0.5,2.5)), 
+                   "tt" : ("tt",slice(-0.5,2.5)), 
+                   "wlnu" : ("wlnu",slice(-0.5,2.5)),
+                   "qcd" : ("qcd",slice(-0.5,2.5)),
+                   "wqq" : ("wqq",slice(-0.5,2.5)),
+                   "zqq" : ("zqq",slice(-0.5,2.5)), 
+                   "matched" : ("tttosemileptonic",slice(1.5,2.5)),
+                   "unmatched" : ("tttosemileptonic",slice(-0.5,1.5)),
+                  }
+        mc = mc.group(oldprocess,newprocesscat, mapping)
+        mc.axis(processname).sorting = 'integral'
+        for ih,hkey in enumerate(mc.identifiers(processname)):
+            mc.identifiers(processname)[ih].label = process_latex[hkey.name]
+
     if plotData: 
          fig, (ax, rax) = plt.subplots(
          nrows=2,
@@ -150,7 +175,7 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
        fig,ax = plt.subplots()
 
     hist.plot1d(mc,
-                overlay='process',
+                overlay=processname,
                 ax=ax,
                 stack=True if not plotDensity else False,
                 clear=False,
@@ -159,7 +184,7 @@ def drawSolo(h,sel,var_name,var_label,plottitle,lumifb,vars_cut,regionsel,savena
                 overflow='allnan',
                 density=plotDensity
                 )
-    tot = mc.sum('process')
+    tot = mc.sum(processname)
     #hist.plot1d(tot,
     #  		clear=False,
     #           fill_opts=fill_tot_opts,
@@ -270,6 +295,7 @@ if __name__ == "__main__":
     parser.add_argument('--hist',       dest='hist',       default='',           help='histname')
     parser.add_argument('--plotData',   dest='plotData',   action='store_true',  help='plot identifier "Data"')
     parser.add_argument('--plotDensity',dest='plotDensity',action='store_true',  help='plot density (MC only)')
+    parser.add_argument('--hadWmatch',  dest='hadWmatch',  action='store_true',  help='matched hadronic Ws from Top')
     args = parser.parse_args()
     if args.plotData and args.plotDensity: raise ValueError("density of data is not valid")
     getPlots(args)
