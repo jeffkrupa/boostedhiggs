@@ -5,7 +5,7 @@ import pprint
 import numpy as np 
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea_ak1/"
-indir="22Feb21"
+indir="Mar25_2016"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 5
@@ -87,7 +87,7 @@ flist[0]['deepAK8'].scale(scale1fb, 'dataset')
 #print('cutflow pre-scale')
 #pp = pprint.PrettyPrinter(indent=4)
 #pp.pprint(flist[0]['cutflow_ttbar_muoncontrol'])
-print(flist[0])
+#print(flist[0])
 for proc,flow in flist[0]['cutflow_muonCR'].items():
     if 'JetHT' in proc or 'SingleMuon' in proc: continue
     for cut, val in flow.items():
@@ -104,23 +104,12 @@ for proc,flow in flist[0]['cutflow_VtaggingCR'].items():
     for cut, val in flow.items():
    
        flist[0]['cutflow_VtaggingCR'][proc][cut] *= scale1fb[proc]
-print('cutflow post-scale')
-pp = pprint.PrettyPrinter(indent=2)
+#print('cutflow post-scale')
+#pp = pprint.PrettyPrinter(indent=2)
 #pp.pprint(flist[0]['cutflow_ttbar_muoncontrol'])
-print('VtaggingCR')
-pp.pprint(flist[0]['cutflow_VtaggingCR'])
+#print('VtaggingCR')
+#pp.pprint(flist[0]['cutflow_VtaggingCR'])
 
-'''for key,val in scale1fb.items():
-  for keyp,valp in flist[0]['cutflow_ttbar_muoncontrol'].items():
-     if key==keyp: 
-        print(flist[0]['cutflow_ttbar_muoncontrol'][keyp])
-        print (key,val); 
-        for x,y in flist[0]['cutflow_ttbar_muoncontrol'][keyp].items():
-            flist[0]['cutflow_ttbar_muoncontrol'][keyp][y] =  val*flist[0]['cutflow_ttbar_muoncontrol'][keyp][y]
-  for keyp,valp in flist[0]['cutflow_ttbar_muoncontrol'].items():
-     if key==keyp: 
-        print (key,val); flist[0]['cutflow_ttbar_muoncontrol'][keyp] = val*flist[0]['cutflow_ttbar_muoncontrol'][keyp]
-'''
 #flist[0]['templates'].scale({k:0.63 for k,_ in flist[0]['sumw'].items() if 'QCD' in k}, 'dataset')
 util.save(flist[0],'%s/hists_sum_gru2.coffea' % (indir))
 for i,x in enumerate(chunk_names):

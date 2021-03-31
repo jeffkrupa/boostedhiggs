@@ -5,13 +5,13 @@ import json
 eosbase = "root://cmseos.fnal.gov/"
 #eosdir = "/store/group/lpcbacon/pancakes/02/"
 eosdir = "/store/user/lpcpfnano/jkrupa/"
-
+year='2016'
 dirlist = [
     #["2017/UL/", "2017UL",["Run20","hww_2017mc","hadd","tmp"]],
     #["2017/tmp-VJets-withPF", "2017VJets",[]],#["tmp-VJets-withPF"]],
     #["2018/UL", "2018UL",["200211_180642"]],
     #["2017/UL/hadd", "2017ULhadd",["_Run2017B"]]
-    ["nanopost_process","2017",[]], 
+    ["nanopost_process/2016/22Mar21_preUL/","2016",[]], 
     #["6Aug20_v2","2017",[]]   
 ]
 
@@ -44,7 +44,7 @@ for dirs in dirlist:
         if not dirlog:
             print("Empty sample skipped")
         else: 
-            jdict[s] = [eosbase+d for d in dirlog]
+            jdict[s+"-"+year] = [eosbase+d for d in dirlog]
     #print(dirs[1],[s for s in jdict])
     with open("fileset%s.json"%(dirs[1]), 'a+') as outfile:
         json.dump(jdict, outfile, indent=4, sort_keys=True)

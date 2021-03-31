@@ -27,44 +27,60 @@ logdir = label
 outdir = '/store/user/jkrupa/coffea_ak1/'+logdir+'/'
 
 samplelist = {
+        #'QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+        #'QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+        #'QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+        #'QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+	#'TTTo2L2Nu_TuneCP5_PSweights_13TeV-powheg-pythia8-2016' : '2016',
+	#'TTToHadronic_TuneCP5_PSweights_13TeV-powheg-pythia8-2016' : '2016',
+	#'TTToSemiLeptonic_TuneCP5_PSweights_13TeV-powheg-pythia8-2016' : '2016',
+	#'JetHT-2016':'2016',
+	#'SingleMuon-2016':'2016', 
+	'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+	'ZJetsToQQ_HT600to800_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+	'ZJetsToQQ_HT400to600_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016',
+        'WJetsToQQ_HT-800toInf_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016', 
+        'WJetsToQQ_HT600to800_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016', 
+        'WJetsToQQ_HT400to600_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016' : '2016', 
+
         'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8':'2017',
-        #'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8' : '2017',
+        'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8' : '2017',
         'TTToHadronic_TuneCP5_13TeV-powheg-pythia8' : '2017',
         #'QCD_HT300to500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
         #'QCD_HT500to700_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-        #'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-        #'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-        #'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
-        #'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+        'QCD_HT700to1000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+        'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+        'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
+        'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8': '2017',
     #    #'VectorZPrimeToQQ_M100_pT300_TuneCP5_madgraph_pythia8_13TeV': '2017',
-        #'WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
-        #'ST_s-channel_4f_hadronicDecays_TuneCP5_13TeV-amcatnlo-pythia8' : '2017',
-        #'ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8' : '2017',
-        #'ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
-        #'ST_t-channel_top_4f_InclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
-        #'ST_tW_antitop_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
-        #'ST_tW_top_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8': '2017',
+        'WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8': '2017',
+        'ST_s-channel_4f_hadronicDecays_TuneCP5_13TeV-amcatnlo-pythia8' : '2017',
+        'ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8' : '2017',
+        'ST_t-channel_antitop_4f_InclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
+        'ST_t-channel_top_4f_InclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
+        'ST_tW_antitop_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8' : '2017',
+        'ST_tW_top_5f_inclusiveDecays_TuneCP5_PSweights_13TeV-powheg-pythia8': '2017',
         #'WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8':'2017',   
-        #'JetHT_pancakes-02_Run2017C-31Mar2018-v1': '2017',
-        #'JetHT_pancakes-02_Run2017D-31Mar2018-v1': '2017',
-        #'JetHT_pancakes-02_Run2017E-31Mar2018-v1': '2017',
-        #'JetHT_pancakes-02_Run2017F-31Mar2018-v1': '2017',
-        #'SingleMuon_pancakes-02_Run2017B-31Mar2018-v1' : '2017',
-        #'SingleMuon_pancakes-02_Run2017C-31Mar2018-v1' : '2017',
-        #'SingleMuon_pancakes-02_Run2017D-31Mar2018-v1' : '2017',
-        #'SingleMuon_pancakes-02_Run2017E-31Mar2018-v1' : '2017',
-        #'SingleMuon_pancakes-02_Run2017F-31Mar2018-v1' : '2017',
-        #'WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
-        #'WJetsToLNu_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
-        #'WJetsToLNu_HT-600To800_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
-        #'WJetsToLNu_HT-800To1200_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
-        #'WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
-        #'WJetsToLNu_HT-2500ToInf_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'JetHT_pancakes-02_Run2017C-31Mar2018-v1': '2017',
+        'JetHT_pancakes-02_Run2017D-31Mar2018-v1': '2017',
+        'JetHT_pancakes-02_Run2017E-31Mar2018-v1': '2017',
+        'JetHT_pancakes-02_Run2017F-31Mar2018-v1': '2017',
+        'SingleMuon_pancakes-02_Run2017B-31Mar2018-v1' : '2017',
+        'SingleMuon_pancakes-02_Run2017C-31Mar2018-v1' : '2017',
+        'SingleMuon_pancakes-02_Run2017D-31Mar2018-v1' : '2017',
+        'SingleMuon_pancakes-02_Run2017E-31Mar2018-v1' : '2017',
+        'SingleMuon_pancakes-02_Run2017F-31Mar2018-v1' : '2017',
+        'WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'WJetsToLNu_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'WJetsToLNu_HT-600To800_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'WJetsToLNu_HT-800To1200_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
+        'WJetsToLNu_HT-2500ToInf_TuneCP5_13TeV-madgraphMLM-pythia8' : '2017',
 }
 
 #################################################
@@ -100,6 +116,10 @@ os.system('mkdir -p /eos/uscms'+outdir)
 
 totfiles = {}
 
+with open('../data/fileset2016.json', 'r') as f:
+    newfiles = json.load(f)
+    totfiles.update(newfiles)
+
 with open('../data/fileset2017.json', 'r') as f:
     newfiles = json.load(f)
     totfiles.update(newfiles)
@@ -118,7 +138,7 @@ for sample in samplelist:
 nsubmit = 0
 
 for sample in samplelist:
-
+    if '2016' not in sample: continue
     prefix = sample
     print('Submitting '+prefix)
 

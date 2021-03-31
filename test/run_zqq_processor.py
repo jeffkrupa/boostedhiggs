@@ -4,6 +4,7 @@ from coffea import processor, util, hist
 import json
 #from coffea.nanoaod.methods import Candidate
 from coffea.nanoevents import BaseSchema, NanoAODSchema, NanoEventsFactory
+NanoAODSchema.warn_missing_crossrefs = True
 #from coffea.nanoaod import NanoEvents
 from boostedhiggs.zqq_processor import ZQQProcessor
 import argparse
@@ -19,6 +20,9 @@ def addCoffea(one,two):
 def run_processor(year,selsamples,starti,endi,outname):
     files = {}
     
+    with open('../data/fileset2016.json', 'r') as f:
+        newfiles = json.load(f)
+        files.update(newfiles)
     with open('../data/fileset2017.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)

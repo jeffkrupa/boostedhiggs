@@ -10,6 +10,10 @@ process_map["qcd"] = [
     'QCD_HT1000to1500_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
     'QCD_HT1500to2000_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
     'QCD_HT2000toInf_TuneCP5_PSWeights_13TeV-madgraphMLM-pythia8',
+        'QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+        'QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+        'QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+        'QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
 ]
 process_map["st"] = [
     'ST_s-channel_4f_hadronicDecays_TuneCP5_13TeV-amcatnlo-pythia8',
@@ -26,8 +30,12 @@ process_map["st"] = [
 ]'''
 process_map["tt"] = [
     'TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8',
-    #'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
+    'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
     'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
+        'TTTo2L2Nu_TuneCP5_PSweights_13TeV-powheg-pythia8-2016' ,
+        'TTToHadronic_TuneCP5_PSweights_13TeV-powheg-pythia8-2016' ,
+        'TTToSemiLeptonic_TuneCP5_PSweights_13TeV-powheg-pythia8-2016',
+
 ]
 process_map["wlnu"] = [
     'WJetsToLNu_HT-100To200_TuneCP5_13TeV-madgraphMLM-pythia8',
@@ -43,11 +51,17 @@ process_map["zqq"] = [
     'ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8',
     'ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8',
     'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'ZJetsToQQ_HT-800toInf_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+    'ZJetsToQQ_HT600to800_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+    'ZJetsToQQ_HT400to600_qc19_4j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
 ]
 process_map["wqq"] = [
     'WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8',
     'WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8',
     'WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8',
+    'WJetsToQQ_HT-800toInf_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+    'WJetsToQQ_HT600to800_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
+    'WJetsToQQ_HT400to600_qc19_3j_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-2016',
 ]
 process_map["zll"] = [
     'DYJetsToLL_M-50_HT-100to200_TuneCP5_13TeV-madgraphMLM-pythia8',
@@ -67,14 +81,16 @@ process_map["JetHT"] = [
     #'JetHT_pancakes-02_Run2017D-09Aug2019_UL2017-v1',
     #'JetHT_pancakes-02_Run2017E-09Aug2019_UL2017-v1',
     #'JetHT_pancakes-02_Run2017F-09Aug2019_UL2017-v1',
+        'JetHT-2016'
 ]
 
 process_map["SingleMuon"] = [
-    'SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1',
-    'SingleMuon_pancakes-02-withPF_Run2017C-09Aug2019_UL2017-v1',
-    'SingleMuon_pancakes-02-withPF_Run2017D-09Aug2019_UL2017-v1',
-    'SingleMuon_pancakes-02-withPF_Run2017E-09Aug2019_UL2017-v1',
-    'SingleMuon_pancakes-02-withPF_Run2017F-09Aug2019_UL2017-v1',
+    'SingleMuon_pancakes-02_Run2017B-31Mar2018-v1',
+    'SingleMuon_pancakes-02_Run2017C-31Mar2018-v1',
+    'SingleMuon_pancakes-02_Run2017D-31Mar2018-v1',
+    'SingleMuon_pancakes-02_Run2017E-31Mar2018-v1',
+    'SingleMuon_pancakes-02_Run2017F-31Mar2018-v1',
+        'SingleMuon-2016',
 ]
 #process_map["zprime"] = [
 #    'VectorZPrimeToQQ_M100_pT300_TuneCP5_madgraph_pythia8_13TeV'
@@ -103,10 +119,10 @@ process_map["tttoleptonic"] = [
 process_map["tttohadronic"] = [
     'TTToHadronic_TuneCP5_13TeV-powheg-pythia8',
 ]
-'''
 process_map["tttosemileptonic"] = [
     'TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8',
 ]
+'''
 process_map["vv"] = [
     'WW_TuneCP5_13TeV-pythia8',
     'WZ_TuneCP5_13TeV-pythia8',
