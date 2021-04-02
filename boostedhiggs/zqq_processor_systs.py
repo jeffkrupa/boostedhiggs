@@ -13,7 +13,7 @@ print('awkward==',ak.__version__)
 #from coffea.nanoevents.methods import vector
 #import coffea
 from boostedhiggs.btag import BTagEfficiency, BTagCorrector
-from boostedhiggs.corrections import (
+from boostedhiggs.corrections_systs import (
     corrected_msoftdrop,
     gruddt_shift,
     n2ddt_shift,
