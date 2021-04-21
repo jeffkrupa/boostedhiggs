@@ -11,9 +11,11 @@ from coffea.util import save, load
 import uproot
 
 #filename="root://cmseos.fnal.gov//store/user/lpcpfnano/jkrupa/nanopost_process/2016/22Mar21_preUL//QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/nano_mc_2016_189_post-process_hadd.root"
+filename="root://cmseos.fnal.gov//store/group/lpcbacon/jkrupa/nanopost_process/6Aug20/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/nano_mc_2017_9TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root"
+#filename="/uscms/home/jkrupa/nobackup/zprlegacy/CMSSW_11_2_1/src/PhysicsTools/NanoAODTools/scripts/test/nano_mc_2017_99_Skim.root"
 #filename="root://cmseos.fnal.gov//store/group/lpcpfnano/jkrupa/nanopost_process//WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8/nano_mc_2017_9WJetsToQQ_HT-800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.root" #
 #filename="test/nano_mc_2017_1TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.root"
-filename="root://cmseos.fnal.gov//store/group/lpcpfnano/jkrupa/nanopost_process/SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1/nano_data_2017_9SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1.root"
+#filename="root://cmseos.fnal.gov//store/group/lpcpfnano/jkrupa/nanopost_process/SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1/nano_data_2017_9SingleMuon_pancakes-02-withPF_Run2017B-09Aug2019_UL2017-v1.root"
 #filename="root://cmseos.fnal.gov//store/user/lpcpfnano/jkrupa/nanopost_process/2016/22Mar21_preUL//JetHT/nano_data_2016_363_post-process_pancakes-02_Run2016G-17Jul2018-v1_hadd.root"
 #filename="test/nano_mc_2016_36_Skim.root"
 f = uproot.open(filename)#, xrootd_handler=uproot.MultithreadedXRootDSource)

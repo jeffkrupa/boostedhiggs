@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import awkward
+import awkward as ak
 import gzip
 import pickle
 from coffea.lookup_tools.lookup_base import lookup_base
@@ -142,10 +142,11 @@ def jet_factory_factory(files):
     return CorrectedJetsFactory(jec_name_map, jec_stack)
 
 
-def add_jec_variables(jets, event_rho):
+def add_jec_variables(jets, jet_matched, event_rho):
+    jets["pt_gen"] = ak.values_astype(ak.fill_none(jet_matched.pt, 0), np.float32)
     jets["pt_raw"] = (1 - jets.rawFactor)*jets.pt
     jets["mass_raw"] = (1 - jets.rawFactor)*jets.mass
-    jets["pt_gen"] = ak.values_astype(ak.fill_none(jets.matched_gen.pt, 0), np.float32)
+    #jets["pt_gen"] = ak.values_astype(ak.fill_none(jets.matched_gen.pt, 0), np.float32)
     jets["event_rho"] = ak.broadcast_arrays(event_rho, jets.pt)[0]
     return jets
 
@@ -165,6 +166,13 @@ jet_factory = {
             os.path.join(DATA_DIR, "Fall17_V3b_MC_PtResolution_AK4PFchs.jr.txt.gz"),
             # https://github.com/cms-jet/JRDatabase/raw/master/textFiles/Fall17_V3b_MC/Fall17_V3b_MC_SF_AK4PFchs.txt
             os.path.join(DATA_DIR, "Fall17_V3b_MC_SF_AK4PFchs.jersf.txt.gz"),
+        ]
+    ),
+    "2017mcNOJER": jet_factory_factory(
+        files=[
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_L1FastJet_AK4PFchs.jec.txt.gz"),
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_L2Relative_AK4PFchs.jec.txt.gz"),
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_Uncertainty_AK4PFchs.junc.txt.gz"),
         ]
     ),
 }
@@ -187,4 +195,12 @@ fatjet_factory = {
             os.path.join(DATA_DIR, "Fall17_V3b_MC_SF_AK8PFPuppi.jersf.txt.gz"),
         ]
     ),
+    "2017mcNOJER": jet_factory_factory(
+        files=[
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFPuppi.jec.txt.gz"),
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_L2Relative_AK8PFPuppi.jec.txt.gz"),
+            os.path.join(DATA_DIR, "Fall17_17Nov2017_V32_MC_Uncertainty_AK8PFPuppi.junc.txt.gz"),
+        ]
+    ),
 }
+met_factory = CorrectedMETFactory(jec_name_map)
