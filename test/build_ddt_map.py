@@ -2,18 +2,18 @@ import os
 import numpy as np
 from coffea import processor, util, hist
 import json
-from coffea.nanoaod.methods import Candidate
+#from coffea.nanoaod.methods import Candidate
 from coffea.util import load, save
-from coffea.nanoaod import NanoEvents
-from boostedhiggs.ddt_processor import DDTProcessor
+#from coffea.nanoaod import NanoEvents
+#from boostedhiggs.ddt_processor import DDTProcessor
 import argparse
 import scipy.ndimage as sc
 import matplotlib.pyplot as plt
 from collections import defaultdict, OrderedDict
 
-DISCRIMINATOR = "jet_in_v3"
+DISCRIMINATOR = "jet_IN_Sep20_2017"
 #DISCRIMINATOR = "jet_twoProngGru"
-HISTNAME = "jet_kin"
+HISTNAME = "IN_Sep20_2017"
 
 def plot(template, name):
     plt.clf()
@@ -23,7 +23,7 @@ def plot(template, name):
     cmstext = plt.text(0.0, 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
     addtext = plt.text(0.11, 1., "Simulation Preliminary",fontsize=10,horizontalalignment='left',verticalalignment='bottom', style='italic', transform=ax.transAxes)
 
-    plt.ylim(200,1200)
+    plt.ylim(200,1500)
     plt.xlim(-5.5,-2)
     plt.savefig('plots/'+name+'.pdf')
     plt.savefig('plots/'+name+'.png')
@@ -101,7 +101,7 @@ def build_ddt_map(coffeafile, percentile, postfix):
     outfile = ROOT.TFile("plots/in_v3_ddtmap.root","recreate")
     outfile.cd()
     print(values_nonan.shape)
-    h1 = ROOT.TH2F("h1","h1",100, 200, 1200, 180, -5.5, -2.)
+    h1 = ROOT.TH2F("h1","h1",100, 200, 1500, 180, -5.5, -2.)
     print(h1.GetNbinsX()-1,h1.GetNbinsY()-1)
     for i in range(h1.GetNbinsX()-1):
         for j in range(h1.GetNbinsY()-1): 

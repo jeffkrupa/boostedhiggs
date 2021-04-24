@@ -5,7 +5,7 @@ import pprint
 import numpy as np 
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea_ak1/"
-indir="Mar25_2016"
+indir="14Apr21_2017_QCD_2"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 5
@@ -73,11 +73,12 @@ scale1fb = {k: xs[k] * 1000 / w for k, w in flist[0]['sumw'].items()}
 
 # print('process %s sum = %.5f' %(str(proc) , (flist[0]['templates'].integrate('region','ttbar_muoncontrol').sum('msd','gruddt','in_v3_ddt','mu_pt','mu_pfRelIso04_all','n2ddt').values()[(str(proc),)])))
 #try:
-flist[0]['templates'].scale(scale1fb, 'dataset')
-flist[0]['muon'].scale(scale1fb, 'dataset')
-flist[0]['event'].scale(scale1fb, 'dataset')
-flist[0]['in_v3'].scale(scale1fb, 'dataset')
-flist[0]['deepAK8'].scale(scale1fb, 'dataset')
+flist[0]['IN_Sep20_2017'].scale(scale1fb, 'dataset')
+flist[0]['IN_Apr21_2017_late'].scale(scale1fb, 'dataset')
+flist[0]['IN_Apr21_2017_early'].scale(scale1fb, 'dataset')
+#flist[0]['event'].scale(scale1fb, 'dataset')
+#flist[0]['in_v3'].scale(scale1fb, 'dataset')
+#flist[0]['deepAK8'].scale(scale1fb, 'dataset')
 #except:
 #  flist[0]['jet_kin'].scale(scale1fb, 'dataset')
 
@@ -88,6 +89,7 @@ flist[0]['deepAK8'].scale(scale1fb, 'dataset')
 #pp = pprint.PrettyPrinter(indent=4)
 #pp.pprint(flist[0]['cutflow_ttbar_muoncontrol'])
 #print(flist[0])
+'''
 for proc,flow in flist[0]['cutflow_muonCR'].items():
     if 'JetHT' in proc or 'SingleMuon' in proc: continue
     for cut, val in flow.items():
@@ -104,6 +106,7 @@ for proc,flow in flist[0]['cutflow_VtaggingCR'].items():
     for cut, val in flow.items():
    
        flist[0]['cutflow_VtaggingCR'][proc][cut] *= scale1fb[proc]
+'''
 #print('cutflow post-scale')
 #pp = pprint.PrettyPrinter(indent=2)
 #pp.pprint(flist[0]['cutflow_ttbar_muoncontrol'])

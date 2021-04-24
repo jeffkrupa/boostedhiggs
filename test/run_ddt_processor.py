@@ -2,9 +2,11 @@ import os
 import numpy as np
 from coffea import processor, util, hist
 import json
-from coffea.nanoaod.methods import Candidate
+#from coffea.nanoaod.methods import Candidate
+from coffea.nanoevents import BaseSchema, NanoAODSchema, NanoEventsFactory
+NanoAODSchema.warn_missing_crossrefs = True
 
-from coffea.nanoaod import NanoEvents
+#from coffea.nanoaod import NanoEvents
 from boostedhiggs.ddt_processor import DDTProcessor
 import argparse
 
@@ -12,22 +14,17 @@ def run_processor(year,selsamples,starti,endi,outname):
     p = DDTProcessor(year=year)
     
     files = {}
-
-    #with open('../data/fileset2017VJets.json', 'r') as f:
-    #    newfiles = json.load(f)
-    #    files.update(newfiles)
-    #with open('../data/fileset2017ULhadd.json', 'r') as f:
-    #    newfiles = json.load(f)
-    #    files.update(newfiles)
-    with open('../data/fileset2017.json', 'r') as f:
+    with open('../data/fileset2017_preUL_QCD.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
     
     
     selfiles = {k: files[k][starti:endi] for k in selsamples}
     
-    args = {'nano': True, 'workers': 1, 'savemetrics': True}
-    out, metrics = processor.run_uproot_job(selfiles, 'Events', p, processor.iterative_executor, args)
+    args = { "schema" : NanoAODSchema}  #{'nano': True, 'workers': 1, 'savemetrics': True}
+
+
+    out = processor.run_uproot_job(selfiles, 'Events', p, processor.iterative_executor, args)
     
     util.save(out, '%s.coffea'%outname)
 

@@ -8,6 +8,7 @@ python -m venv --copies $NAME
 source $NAME/bin/activate
 python -m pip install setuptools pip --upgrade
 python -m pip install coffea==0.7 --upgrade
+python -m pip install cloudpickle==1.6 #--upgrade
 sed -i '40s/.*/VIRTUAL_ENV="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}" )")" \&\& pwd)"/' $NAME/bin/activate
 sed -i '1s/#!.*python$/#!\/usr\/bin\/env python/' $NAME/bin/*
 sed -i "2a source ${LCG}" $NAME/bin/activate

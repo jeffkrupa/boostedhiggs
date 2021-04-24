@@ -6,7 +6,7 @@ import json
 from coffea.nanoevents import BaseSchema, NanoAODSchema, NanoEventsFactory
 NanoAODSchema.warn_missing_crossrefs = True
 #from coffea.nanoaod import NanoEvents
-from boostedhiggs.zqq_processor import ZQQProcessor
+from boostedhiggs.zqq_processor_Yihan import ZQQProcessor
 import argparse
 
 def addCoffea(one,two):
@@ -20,12 +20,12 @@ def addCoffea(one,two):
 def run_processor(year,selsamples,starti,endi,outname):
     files = {}
     
-    with open('../data/fileset2016.json', 'r') as f:
+    with open('../data/fileset2017_preUL.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
-    with open('../data/fileset2017.json', 'r') as f:
-        newfiles = json.load(f)
-        files.update(newfiles)
+    #with open('../data/fileset2017.json', 'r') as f:
+    #    newfiles = json.load(f)
+    #    files.update(newfiles)
 
     selfiles = {k: files[k][starti:endi] for k in selsamples}
     print(selfiles)
