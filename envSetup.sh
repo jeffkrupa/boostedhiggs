@@ -6,10 +6,15 @@ source $LCG
 # following https://aarongorka.com/blog/portable-virtualenv/, an alternative is https://github.com/pantsbuild/pex
 python -m venv --copies $NAME
 source $NAME/bin/activate
+LOCALPATH=$NAME$(python -c 'import sys; print(f"/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")')
+export PYTHONPATH=${LOCALPATH}:$PYTHONPATH
 python -m pip install setuptools pip --upgrade
+python -m pip install cloudpickle==1.6 --ignore-installed --upgrade
 python -m pip install coffea==0.7 --upgrade
-python -m pip install cloudpickle==1.6 #--upgrade
+python -m pip install -e .
+#python -m pip install pyarrow --upgrade
 sed -i '40s/.*/VIRTUAL_ENV="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}" )")" \&\& pwd)"/' $NAME/bin/activate
 sed -i '1s/#!.*python$/#!\/usr\/bin\/env python/' $NAME/bin/*
 sed -i "2a source ${LCG}" $NAME/bin/activate
+sed -i "3a export PYTHONPATH=${LOCALPATH}:\$PYTHONPATH" $NAME/bin/activate
 tar -zcf ${NAME}.tar.gz ${NAME}

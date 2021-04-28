@@ -11,15 +11,15 @@ import scipy.ndimage as sc
 import matplotlib.pyplot as plt
 from collections import defaultdict, OrderedDict
 
-DISCRIMINATOR = "jet_IN_Sep20_2017"
+DISCRIMINATOR = "jet_n2b1"
 #DISCRIMINATOR = "jet_twoProngGru"
-HISTNAME = "IN_Sep20_2017"
+HISTNAME = "n2b1"
 
 def plot(template, name):
     plt.clf()
 
     #ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.5, "vmax":0.99})#,xoverflow='all',yoverflow='all')
-    ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.5, "vmax":1.})#,xoverflow='all',yoverflow='all')
+    ax = hist.plot2d(template, xaxis = "jet_rho",  patch_opts={"vmin":0.0, "vmax":0.25})#,xoverflow='all',yoverflow='all')
     cmstext = plt.text(0.0, 1., "CMS",fontsize=12,horizontalalignment='left',verticalalignment='bottom', fontweight='bold',transform=ax.transAxes)
     addtext = plt.text(0.11, 1., "Simulation Preliminary",fontsize=10,horizontalalignment='left',verticalalignment='bottom', style='italic', transform=ax.transAxes)
 
@@ -62,10 +62,11 @@ def build_ddt_map(coffeafile, percentile, postfix):
     binfunc = np.vectorize(bineval)
     
     qmap = binfunc(res)
-
+    qmap = np.nan_to_num(qmap, posinf=0, neginf=0, nan=0) 
+    print(type(qmap))
     template.clear()
     template._sumw = {():qmap}
-    template.label = 'IN cut at ' + str(int(100*percentile)) + '%'
+    template.label = 'N2 cut at ' + str(int(100*percentile)) + '%'
 
     print(template.values()[()])
     save(template, '../boostedhiggs/ddtmap_%s.coffea'%postfix) 
@@ -88,11 +89,11 @@ def build_ddt_map(coffeafile, percentile, postfix):
     print("}",end="")
     '''
     #smoothing
-    #smooth_qmap = sc.filters.gaussian_filter(qmap,1)
+    smooth_qmap = sc.filters.gaussian_filter(qmap,0.8,mode='reflect')
 
-    #template.clear()
-    #template._sumw = {():smooth_qmap}
-    #template.label = 'IN cut at ' + str(100*percentile) + '% (smoothed)'
+    template.clear()
+    template._sumw = {():smooth_qmap}
+    template.label = 'IN cut at ' + str(100*percentile) + '% (smoothed)'
     values_nonan = template.values()[()]
     print(values_nonan)
     save(template, '../boostedhiggs/ddtmap_smooth_%s.coffea'%postfix) 

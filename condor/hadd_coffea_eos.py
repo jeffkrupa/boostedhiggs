@@ -5,14 +5,14 @@ import pprint
 import numpy as np 
 
 eosdir = "/eos/uscms/store/user/jkrupa/coffea_ak1/"
-indir="14Apr21_2017_QCD_2"
+indir="14Apr21_2016_QCD"
 os.system("mkdir -p %s" % indir)
 
 chunk_size = 5
 
 from os import listdir
 from os.path import isfile, join
-onlyfiles = [f[:-7] for f in os.listdir("../condor/"+indir+"/") if os.path.isfile(os.path.join("../condor/"+indir+"/", f)) and f.endswith(".condor")]
+onlyfiles = [f[:-7] for f in os.listdir("condor/"+indir+"/") if os.path.isfile(os.path.join("condor/"+indir+"/", f)) and f.endswith(".condor")]
 
 names = []
 for name in onlyfiles:
@@ -63,7 +63,7 @@ for key in flist[0]:
   
 #print('hists',flist[0])
 xs = {}
-with open('../data/xsec.json', 'r') as f:
+with open('data/xsec.json', 'r') as f:
    xs = json.load(f)
 
 #flist[0]['templates']   

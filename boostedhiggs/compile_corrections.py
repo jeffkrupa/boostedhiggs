@@ -41,24 +41,41 @@ rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
 pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
 corrections['2017_inddt90pctl_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
 '''
-
-shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_smooth_Apr21_2017_late.coffea'))
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_n2b1_2016.coffea'))
 values = shift_hist.values(overflow='none')[()]
 rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
 pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
-corrections['2017_smooth_Apr21_2017_late_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+corrections['2016_n2b1_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
 
-shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_smooth_Apr21_2017_early.coffea'))
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_IN_14Apr21_2016_early.coffea'))
 values = shift_hist.values(overflow='none')[()]
 rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
 pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
-corrections['2017_smooth_Apr21_2017_early_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+corrections['2016_Apr21_2016_early_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
 
-shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_smooth_Sep20_2017.coffea'))
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_IN_14Apr21_2016_late.coffea'))
 values = shift_hist.values(overflow='none')[()]
 rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
 pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
-corrections['2017_smooth_Sep20_2017_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+corrections['2016_Apr21_2016_late_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_Apr21_2017_late.coffea'))
+values = shift_hist.values(overflow='none')[()]
+rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
+pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
+corrections['2017_Apr21_2017_late_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_Apr21_2017_early.coffea'))
+values = shift_hist.values(overflow='none')[()]
+rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
+pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
+corrections['2017_Apr21_2017_early_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
+
+shift_hist = load(os.path.join(os.path.dirname(__file__), 'data', 'ddtmap_Sep20_2017.coffea'))
+values = shift_hist.values(overflow='none')[()]
+rho_bins = shift_hist.axis("jet_rho").edges(overflow='none')
+pt_bins = shift_hist.axis("jet_pt").edges(overflow='none')
+corrections['2017_Sep20_2017_rho_pt'] = lookup_tools.dense_lookup.dense_lookup(values, (pt_bins,rho_bins))
 
 '''
 from coffea.lookup_tools import extractor
@@ -67,6 +84,6 @@ ext.add_weight_sets(["2017_muTrigAbsEta_pt Mu50_PtEtaBins/abseta_pt_ratio data/E
 ext.finalize()
 corrections['2017_muTrigAbsEta_pt'] = ext.make_evaluator()['2017_muTrigAbsEta_pt']
 '''
-save(corrections, 'data/corrections_4.coffea')
+save(corrections, 'data/corrections_5.coffea')
 
 

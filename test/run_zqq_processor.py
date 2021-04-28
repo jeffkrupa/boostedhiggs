@@ -9,18 +9,14 @@ NanoAODSchema.warn_missing_crossrefs = True
 from boostedhiggs.zqq_processor_Yihan import ZQQProcessor
 import argparse
 
-def addCoffea(one,two):
-    for key, val in two.items():
-        if isinstance(key, hist.Hist):
-            one[key].add(two[key])
-        else:
-            one[key] += two[key]
-    return one
 
 def run_processor(year,selsamples,starti,endi,outname):
     files = {}
+    with open('data/fileset2016_preUL.json', 'r') as f:
+        newfiles = json.load(f)
+        files.update(newfiles)
     
-    with open('../data/fileset2017_preUL.json', 'r') as f:
+    with open('data/fileset2017_preUL.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
     #with open('../data/fileset2017.json', 'r') as f:

@@ -86,21 +86,26 @@ def VQQgenmatch(events):
     if   'WJetsToQQ'   in dataset: motherId = 24
     elif 'ZJetsToQQ'   in dataset: motherId = 23
     elif 'VectorDiJet' in dataset: motherId = 55
-    else: return np.ones(len(events.FatJet.pt),dtype=bool) #events.FatJet.pt.ones_like()
+    else: return np.ones(len(events.FatJet.pt),dtype=bool), np.ones(len(events.FatJet.pt),dtype=int) #events.FatJet.pt.ones_like()
 
     mother = ak.flatten(events.GenPart[(abs(events.GenPart.pdgId) == motherId) & events.GenPart.hasFlags(["isLastCopy","fromHardProcess"])])
-    print(mother)
-    print(mother.children.pdgId)
-    print(mother.children)
+    #print(mother)
+    #print(mother.children.pdgId)
+    #print(mother.children)
     try: 
        q0 = mother.children[:, 0]
        q1 = mother.children[:, 1]
     except:
        q0 = mother.children[:, 0]
        q1 = mother.children[:, 1]
-    print(q0.pdgId,q1.pdgId)
+    #print(q0.pdgId,q1.pdgId)
+    childid = abs(mother.children.pdgId)
+    genflavor = ak.any(childid == 5, axis=-1) * 3 + ak.any(childid == 4, axis=-1) * 2 + ak.any(childid < 4, axis=-1) * 1
+    print(childid[genflavor>3])
+    print(len(childid[genflavor>3]))
+    print(genflavor[genflavor>3])
     leading_jet = ak.firsts(events.FatJet)
-    return (leading_jet.delta_r2(q0) < 0.8*0.8) & (leading_jet.delta_r2(q1) < 0.8*0.8)
+    return (leading_jet.delta_r2(q0) < 0.8*0.8) & (leading_jet.delta_r2(q1) < 0.8*0.8), genflavor
 
 def update(events, collections):
     """Return a shallow copy of events array with some collections swapped out"""
@@ -113,7 +118,24 @@ class ZQQProcessor(processor.ProcessorABC):
     def __init__(self, year='2017',region='signal'):
         self._year = year
         self._region = region
+
+        self._fjpTcut = {"2016" : 500.,
+                         "2017" : 525.,
+                         "2018" : 500.,
+                        }
+        self._btagSF = BTagCorrector(year, 'medium')
         self._triggers = {
+            '2016': [
+                'AK8PFJet360_TrimMass30',
+		'AK8PFHT700TrimR0p1PT0p03Mass50',
+                'PFJet500',
+                'AK8PFJet500', 
+                'PFHT800',
+                'PFHT900',
+                'PFHT650_WideJetMJJ900DEtaJJ1p5',
+                'PFHT650_WideJetMJJ950DEtaJJ1p5',
+                'AK8DiPFJet300_200_TrimMass30_BTagCSV_p20'
+                 ],
             '2017': [
                 'PFHT1050',
                 'AK8PFJet400_TrimMass30',
@@ -127,6 +149,10 @@ class ZQQProcessor(processor.ProcessorABC):
                  ]
         }
         self._muontriggers = {
+            '2016': [
+                'Mu50', 
+                 'Mu55',
+                 ],
             '2017': [
                 'Mu50', 
                  #'Mu55',
@@ -142,30 +168,38 @@ class ZQQProcessor(processor.ProcessorABC):
                 #hist.Bin('nJet', r'Number of FatJets', [0.5,1.5,2.5,3.5,4.5,6.5]),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
                 hist.Bin('nPFConstituents', r'Number of PFCandidates', 30,0,60),#[525,575,625,700,800,1500]),#np.arange(525,2000,50)),
             ),
+            'btagWeight': hist.Hist('Events', hist.Cat('dataset', 'Dataset'), hist.Bin('val', 'BTag correction', 50, 0, 3)),
             'muon': hist.Hist(
                 'Muon', hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
                 hist.Bin('mu_pt', 'Leading muon p_{T}', 15,50., 700.),
                 hist.Bin('mu_pfRelIso04_all', 'Muon pfRelIso04 isolation', 10,0.,0.25),
             ),
-            'in_v3': hist.Hist(
+            'IN_2016': hist.Hist(
                 'in_v3', hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                #hist.Bin('in_v3', 'IN  value', 25,0,1),
-                #hist.Bin('gru', 'GRU  value', 25,0,1),
-                hist.Bin('n2', 'n2  value', 25,0,0.5),
-                #hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
-                hist.Bin('IN_Apr21_2017_late', 'IN_Apr21_2017_late value',  25,0,1),
-                hist.Bin('IN_Apr21_2017_early', 'IN_Apr21_2017_early value',  25,0,1),
-                hist.Bin('IN_Sep20_2017', 'IN_Sep20_2017 value',  25,0,1),
+                #hist.Bin('n2', 'n2  value', 20,0,0.5),
+                hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+                hist.Bin('IN_Apr21_2016_late', 'IN_Apr21_2016_late value',  20,0,1),
+                hist.Bin('IN_Apr21_2016_early', 'IN_Apr21_2016_early value',  20,0,1),
+                hist.Bin('msd', 'msd', 25,40,300),
             ),
-            'deepAK8': hist.Hist(
-                'deepAK8', hist.Cat('dataset', 'Dataset'),
+            'N2': hist.Hist(
+                'in_v3', hist.Cat('dataset', 'Dataset'),
                 hist.Cat('region', 'Region'),
-                hist.Bin('deepTagMDWqq', 'DeepTagMDWqq', 25,0,1),
-                hist.Bin('deepTagMDZqq', 'DeepTAGMDZqq', 25,0,1),
-                hist.Bin('msd', r'Jet $m_{sd}$', 41, 40, 200),
-                #hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+                hist.Bin('n2', 'n2  value', 20,0,0.5),
+                hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+                hist.Bin('msd', 'msd', 25,40,300),
+            ),
+
+            'IN_2017': hist.Hist(
+                'in_v3', hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('genflavor', 'Gen. jet flavor', [-0.5,0.5,1.5,2.5,3.5,4.5,5.5]),
+                hist.Bin('IN_Apr21_2017_late', 'IN_Apr21_2017_late value',  20,0,1),
+                hist.Bin('IN_Apr21_2017_early', 'IN_Apr21_2017_early value',  20,0,1),
+                hist.Bin('msd', 'msd', 25,40,300),
+                hist.Bin('IN_Sep20_2017', 'IN_Sep20_2017 value',  20,0,1),
             ),
             'templates': hist.Hist(
                 'Events',
@@ -180,8 +214,7 @@ class ZQQProcessor(processor.ProcessorABC):
                 #hist.Bin('in_v3_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
                 hist.Cat('systematic', 'Systematic'),
                 hist.Bin('IN_Apr21_2017_late_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
-                hist.Bin('IN_Apr21_2017_early_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
-                hist.Bin('IN_Sep20_2017_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
+                hist.Bin('IN_Apr21_2016_late_ddt', 'IN$^{DDT}$  value', [-2,0,2]),
             ),
             'cutflow_signal' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
             'cutflow_muonCR' : processor.defaultdict_accumulator(partial(processor.defaultdict_accumulator, float)),
@@ -251,7 +284,7 @@ class ZQQProcessor(processor.ProcessorABC):
                 region=region,
                 pt=normalize(candidatejet.pt, cut),
                 msd=normalize(candidatejet.msdcorr, cut),
-                n2ddt=normalize(candidatejet.n2ddt, cut),
+                n2ddt=normalize(candidatejet.n2b1_ddt, cut),
                 #gruddt=normalize(candidatejet.gruddt, cut),
                 #in_v3_ddt=normalize(candidatejet.in_v3_ddt, cut),
                 hadW=normalize(candidatejet.nmatcheddau,cut),
@@ -259,8 +292,7 @@ class ZQQProcessor(processor.ProcessorABC):
                 ##
                 systematic = sname,
                 IN_Apr21_2017_late_ddt=normalize(candidatejet.IN_Apr21_2017_late_ddt, cut),
-                IN_Apr21_2017_early_ddt=normalize(candidatejet.IN_Apr21_2017_early_ddt, cut),
-                IN_Sep20_2017_ddt=normalize(candidatejet.IN_Sep20_2017_ddt, cut),
+                IN_Apr21_2016_late_ddt=normalize(candidatejet.IN_Apr21_2016_late_ddt, cut),
             ),
             output['event'].fill(
                 dataset=dataset,
@@ -270,23 +302,34 @@ class ZQQProcessor(processor.ProcessorABC):
                 nPFConstituents=normalize(candidatejet.nPFConstituents,cut),
                 weight=weight,
             ),
-
-            output['deepAK8'].fill(
+            output['IN_2016'].fill(
                 dataset=dataset,
                 region=region,
-                deepTagMDWqq=normalize(candidatejet.deepTagMDWqq,cut),
-                deepTagMDZqq=normalize(candidatejet.deepTagMDZqq,cut),
-                msd=normalize(candidatejet.msdcorr, cut),
-                #genflavor=genflavor[cut],
+                genflavor=normalize(candidatejet.genflavor,cut), 
+                #in_v3=normalize(candidatejet.in_v3,cut),
+                #n2=normalize(candidatejet.n2b1,cut),
+                #gru=normalize(candidatejet.gru,cut),
+                msd=normalize(candidatejet.msdcorr,cut),
+                weight=weight,
+                IN_Apr21_2016_late=normalize(candidatejet.IN_Apr21_2016_late, cut),
+                IN_Apr21_2016_early=normalize(candidatejet.IN_Apr21_2016_early, cut),
+                #IN_Sep20_2017=normalize(candidatejet.IN_Sep20_2017, cut),
+            ),
+            output['N2'].fill(
+                dataset=dataset,
+                region=region,
+                msd=normalize(candidatejet.msdcorr,cut),
+                genflavor=normalize(candidatejet.genflavor,cut), 
+                n2=normalize(candidatejet.n2b1,cut),
                 weight=weight,
             ),
-            output['in_v3'].fill(
+
+            output['IN_2017'].fill(
                 dataset=dataset,
                 region=region,
-                #genflavor=genflavor[cut], 
-                #in_v3=normalize(candidatejet.in_v3,cut),
-                n2=normalize(candidatejet.n2b1,cut),
-                #gru=normalize(candidatejet.gru,cut),
+                genflavor=normalize(candidatejet.genflavor,cut), 
+                #n2=normalize(candidatejet.n2b1,cut),
+                msd=normalize(candidatejet.msdcorr,cut),
                 weight=weight,
                 IN_Apr21_2017_late=normalize(candidatejet.IN_Apr21_2017_late, cut),
                 IN_Apr21_2017_early=normalize(candidatejet.IN_Apr21_2017_early, cut),
@@ -307,20 +350,22 @@ class ZQQProcessor(processor.ProcessorABC):
         fatjets = events.FatJet
         fatjets['msdcorr'] = corrected_msoftdrop(fatjets)
         fatjets['qcdrho'] = 2*np.log(fatjets.msdcorr/fatjets.pt)
-        #fatjets['gruddt'] = gru.v25 - shift(fatjets,algo='gruddt',year=self._year)
-        #fatjets['gru'] = gru.v25
-        #fatjets['in_v3'] = IN.v3 
-        #fatjets['in_v3_ddt'] = IN.v3 - shift(fatjets,algo='inddt',year=self._year)
-        #fatjets['in_v3_ddt_90pctl'] = IN.v3 - shift(fatjets,algo='inddt90pctl',year=self._year)
 
+        fatjets['IN_Apr21_2016_late']      = IN.Apr21_2016_late
+        fatjets['IN_Apr21_2016_early']     = IN.Apr21_2016_early
         fatjets['IN_Apr21_2017_late']      = IN.Apr21_2017_late
         fatjets['IN_Apr21_2017_early']     = IN.Apr21_2017_early
         fatjets['IN_Sep20_2017']           = IN.Sep20_2017
-        fatjets['IN_Apr21_2017_late_ddt']  = IN.Apr21_2017_late    - shift(fatjets,algo='smooth_Apr21_2017_late')
-        fatjets['IN_Apr21_2017_early_ddt'] = IN.Apr21_2017_early - shift(fatjets,algo='smooth_Apr21_2017_early')
-        fatjets['IN_Sep20_2017_ddt']       = IN.Sep20_2017         - shift(fatjets,algo='smooth_Sep20_2017')
 
-        fatjets['n2ddt'] = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
+        fatjets['IN_Apr21_2016_late_ddt']      = IN.Apr21_2016_late  - shift(fatjets,algo='Apr21_2016_late',year='2016')
+        fatjets['IN_Apr21_2016_early_ddt']     = IN.Apr21_2016_early - shift(fatjets,algo='Apr21_2016_early',year='2016')
+        fatjets['IN_Apr21_2017_late_ddt']      = IN.Apr21_2017_late  - shift(fatjets,algo='Apr21_2017_late',year='2017')
+        fatjets['IN_Apr21_2017_early_ddt']     = IN.Apr21_2017_early - shift(fatjets,algo='Apr21_2017_early',year='2017')
+        fatjets['IN_Sep20_2017_ddt']           = IN.Sep20_2017       - shift(fatjets,algo='Sep20_2017')
+
+        fatjets['n2b1']          = fatjets.n2b1
+        fatjets['n2b1_ddt']      = fatjets.n2b1 - n2ddt_shift(fatjets,year=self._year)
+
         fatjets['nmatcheddau'] = TTsemileptonicmatch(events)
         dataset = events.metadata['dataset']
         print('process dataset', dataset)
@@ -351,32 +396,38 @@ class ZQQProcessor(processor.ProcessorABC):
             else:
                 trigger_fatjet = np.ones(len(events), dtype='bool')
 
-            fatjets["genMatchFull"] = VQQgenmatch(events)
+            fatjets["genMatchFull"], fatjets["genflavor"] = VQQgenmatch(events)
+
             candidatejet = ak.firsts(fatjets)
-            candidatejet["genMatchFull"] = VQQgenmatch(events)
-            nelectrons = ak.sum(
+            #candidatejet["genMatchFull"] = VQQgenmatch(events)
+            goodelectron=(
                 (events.Electron.pt > 10.)
                 & (abs(events.Electron.eta) < 2.5) 
-                & (events.Electron.cutBased >= events.Electron.VETO),
-                axis = 1,
-            )
-            nmuons = ak.sum(
+                & (events.Electron.cutBased >= events.Electron.LOOSE)
+                )
+            nelectrons = ak.sum(goodelectron, axis=1)
+
+            goodmuon=(
                 (events.Muon.pt > 10)
                 & (abs(events.Muon.eta) < 2.1)
                 & (events.Muon.pfRelIso04_all < 0.4)
-                & (events.Muon.looseId),
-                axis = 1,
-            )
+                & (events.Muon.looseId)
+                )
+            nmuons = ak.sum(goodmuon, axis=1)
+
             ntaus = ak.sum(
-                (events.Tau.pt > 20.)
+                ((events.Tau.pt > 20.)
                 & (events.Tau.idDecayMode)
                 & (events.Tau.rawIso < 5)
-                & (abs(events.Tau.eta) < 2.3),
-                axis = 1,
+                & (abs(events.Tau.eta) < 2.3)
+                & ak.all(events.Tau.metric_table(events.Muon[goodmuon]) > 0.4, axis=2)
+                & ak.all(events.Tau.metric_table(events.Electron[goodelectron]) > 0.4, axis=2)
+                ), 
+            axis = 1,
             )
 
             cuts = { "S_fatjet_trigger" : trigger_fatjet,
-                     "S_pt" : candidatejet.pt > 525,
+                     "S_pt" : candidatejet.pt > self._fjpTcut[self._year],
                      "S_eta" : (abs(candidatejet.eta) < 2.5),
                      "S_msdcorr" : (candidatejet.msdcorr > 40),
                      "S_rho"     : ((candidatejet.qcdrho > -5.5) &(candidatejet.qcdrho < -2.)),
@@ -411,6 +462,7 @@ class ZQQProcessor(processor.ProcessorABC):
 
         #######################
         if 'muonCR' in self._region:
+            fatjets["genMatchFull"], fatjets["genflavor"] = VQQgenmatch(events)
                 
             if isRealData:
                 trigger_muon = np.zeros(len(events), dtype='bool')
@@ -437,7 +489,7 @@ class ZQQProcessor(processor.ProcessorABC):
             nelectrons = ak.sum(
                 (events.Electron.pt > 10.)
                 & (abs(events.Electron.eta) < 2.5) 
-                & (events.Electron.cutBased >= events.Electron.VETO),
+                & (events.Electron.cutBased >= events.Electron.LOOSE),
                 axis = 1,
             )
             nmuons = ak.sum(
@@ -457,7 +509,7 @@ class ZQQProcessor(processor.ProcessorABC):
             )
 
             cuts = { "CR1_muon_trigger"       : trigger_muon,
-                     "CR1_jet_pt"             : (candidatejet.pt > 525),
+                     "CR1_jet_pt"             : (candidatejet.pt > self._fjpTcut[self._year]),
                      "CR1_jet_eta"            : (abs(candidatejet.eta) < 2.5),
                      "CR1_jet_msd"            : (candidatejet.msdcorr > 40),
                      "CR1_jet_rho"            : ((candidatejet.qcdrho > -5.5) & (candidatejet.qcdrho < -2.)),
@@ -472,7 +524,7 @@ class ZQQProcessor(processor.ProcessorABC):
                      "CR1_notau"              : (ntaus==0),
                    }
             for name, cut in cuts.items(): 
-                selection.add(name, cut)
+                print(name, cut); selection.add(name, cut)
 
             if isRealData:
                 genflavor = 0 #candidatejet.pt.zeros_like().pad(1, clip=True).fillna(-1).flatten()
@@ -484,6 +536,7 @@ class ZQQProcessor(processor.ProcessorABC):
                 genBosonPt = ak.fill_none(ak.firsts(bosons.pt), 0)
                 #add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
                 #genflavor = matchedBosonFlavor(candidatejet, bosons).pad(1, clip=True).fillna(-1).flatten()
+                output['btagWeight'].fill(dataset=dataset, val=self._btagSF.addBtagWeight(weights_muonCR, ak4_away))
 
             allcuts_ttbar_muoncontrol = set()
             output['cutflow_muonCR'][dataset]['none']+= float(weights_muonCR.weight().sum())
@@ -495,6 +548,7 @@ class ZQQProcessor(processor.ProcessorABC):
 
         #######################
         if 'VtaggingCR' in self._region:
+            fatjets["genMatchFull"], fatjets["genflavor"] = VQQgenmatch(events)
             if isRealData:
                 trigger_muon = np.zeros(len(events), dtype='bool')
                 for t in self._muontriggers[self._year]:
@@ -515,7 +569,7 @@ class ZQQProcessor(processor.ProcessorABC):
             dr_ak4_muon = jets.delta_r(candidatemuon)
 
             ak4_away = jets[(dr_ak4_ak8 > 0.8)]# & (dr_ak4_muon > 0.4)]
-            
+            ''' 
             mu_p4 = ak.zip(
                 { 
                     "pt"   : ak.fill_none(candidatemuon.pt,0),
@@ -537,7 +591,7 @@ class ZQQProcessor(processor.ProcessorABC):
             )
 
             Wleptoniccandidate = mu_p4 + met_p4 
-            
+            ''' 
             nelectrons = ak.sum(
                 ((events.Electron.pt > 10.)
                 & (abs(events.Electron.eta) < 2.5) 
@@ -576,8 +630,8 @@ class ZQQProcessor(processor.ProcessorABC):
                 "CR2_mu_isolationTight": (candidatemuon.pfRelIso04_all < 0.15),
                 "CR2_muonDphiAK8"      : abs(candidatemuon.delta_phi(candidatejet)) > 2*np.pi/3,
                 "CR2_ak4btagMedium08"  : (ak.max(ak4_away.btagCSVV2, axis=1, mask_identity=False) > BTagEfficiency.btagWPs[self._year]['medium']),
-                "CR2_leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
-                #"CR2_leptonicW"        : ak.flatten((candidatemuon + events.MET).pt>200),
+                #"CR2_leptonicW"        : ak.flatten(Wleptoniccandidate.pt>200),
+                "CR2_leptonicW"        : (candidatemuon + events.MET).pt>200,
                 "CR2_MET"              : (events.MET.pt > 40.),
                 "CR2_noelectron"       : (nelectrons==0),
                 "CR2_one_tightMuon"    : (n_tight_muon==1),
@@ -599,6 +653,7 @@ class ZQQProcessor(processor.ProcessorABC):
                 #add_VJets_NLOkFactor(weights, genBosonPt, self._year, dataset)  
                 #genflavor = matchedBosonFlavor(candidatejet, bosons).pad(1, clip=True).fillna(-1).flatten()
                 #b-tag weights
+                output['btagWeight'].fill(dataset=dataset, val=self._btagSF.addBtagWeight(weights_VtaggingCR, ak4_away))
             allcuts_vselection = set()
             output['cutflow_VtaggingCR'][dataset]['none']+= float(weights_VtaggingCR.weight().sum())
 

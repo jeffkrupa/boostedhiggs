@@ -8,8 +8,8 @@ from coffea.util import load, save
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
 #compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_4.coffea'))
-#compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_5.coffea'))
-compiled = load("/uscms/home/jkrupa/nobackup/zprlegacy/scratch3/boostedhiggs/boostedhiggs/data/corrections_5.coffea")
+compiled = load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'corrections_5.coffea'))
+#compiled = load("/uscms/home/jkrupa/nobackup/zprlegacy/scratch3/boostedhiggs/boostedhiggs/data/corrections_5.coffea")
 
 #with gzip.open(os.path.join(os.path.dirname(__file__), 'data', 'corrections.pkl.gz')) as fin:
 #    compiled = pickle.load(fin)

@@ -493,7 +493,7 @@ class ZQQProcessor(processor.ProcessorABC):
             dr_ak4_muon = jets.delta_r(candidatemuon)
 
             ak4_away = jets[(dr_ak4_ak8 > 0.8)]# & (dr_ak4_muon > 0.4)]
-            mu_p4 = ak.zip(
+            '''mu_p4 = ak.zip(
                 { 
                     "pt"   : ak.fill_none(candidatemuon.pt,0),
                     "eta"  : ak.fill_none(candidatemuon.eta,0),
@@ -512,9 +512,8 @@ class ZQQProcessor(processor.ProcessorABC):
                 },
                 with_name="PtEtaPhiMLorentzVector"
             )
-
             Wleptoniccandidate = mu_p4 + met_p4 
-
+            '''
             nelectrons = ak.sum(
                 ((events.Electron.pt > 10.)
                 & (abs(events.Electron.eta) < 2.5) 

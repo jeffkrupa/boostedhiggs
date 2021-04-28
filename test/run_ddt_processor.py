@@ -14,7 +14,10 @@ def run_processor(year,selsamples,starti,endi,outname):
     p = DDTProcessor(year=year)
     
     files = {}
-    with open('../data/fileset2017_preUL_QCD.json', 'r') as f:
+    with open('data/fileset2016_preUL.json', 'r') as f:
+        newfiles = json.load(f)
+        files.update(newfiles)
+    with open('data/fileset2017_preUL.json', 'r') as f:
         newfiles = json.load(f)
         files.update(newfiles)
     

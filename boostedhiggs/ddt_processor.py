@@ -31,6 +31,14 @@ class DDTProcessor(processor.ProcessorABC):
         }
         self._accumulator = processor.dict_accumulator({
             'sumw': processor.defaultdict_accumulator(float),
+            'n2b1': hist.Hist(
+                'Events',
+                hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1500),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
+                hist.Bin('jet_n2b1', 'N2  value', 100, 0.0, 1.0),
+            ),
             'IN_Sep20_2017': hist.Hist(
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
@@ -55,6 +63,22 @@ class DDTProcessor(processor.ProcessorABC):
                 hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
                 hist.Bin('jet_IN_Apr21_2017_early', 'IN  value', 100, 0.0, 1.0),
             ),
+            'IN_Apr21_2016_late': hist.Hist(
+                'Events',
+                hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1500),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
+                hist.Bin('jet_IN_Apr21_2016_late', 'IN  value', 100, 0.0, 1.0),
+            ),
+            'IN_Apr21_2016_early': hist.Hist(
+                'Events',
+                hist.Cat('dataset', 'Dataset'),
+                hist.Cat('region', 'Region'),
+                hist.Bin('jet_pt', r'Jet $p_{T}$ [GeV]', 100, 200, 1500),
+                hist.Bin('jet_rho', r'Jet $\rho$', 180, -5.5, -2.),
+                hist.Bin('jet_IN_Apr21_2016_early', 'IN  value', 100, 0.0, 1.0),
+            ),
             'cutflow': hist.Hist(
                 'Events',
                 hist.Cat('dataset', 'Dataset'),
@@ -77,6 +101,13 @@ class DDTProcessor(processor.ProcessorABC):
             cut = selection.all(*selections)
             sname = 'nominal' if systematic is None else systematic
             weight = weights.weight()[cut]
+            output['n2b1'].fill(
+                dataset=dataset,
+                region=region,
+                jet_pt=normalize(candidatejet.pt, cut),
+                jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
+                jet_n2b1=normalize(candidatejet.n2b1, cut),
+            )
             output['IN_Sep20_2017'].fill(
                 dataset=dataset,
                 region=region,
@@ -98,10 +129,24 @@ class DDTProcessor(processor.ProcessorABC):
                 jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
                 jet_IN_Apr21_2017_late=normalize(candidatejet.IN_Apr21_2017_late, cut),
             )
+            output['IN_Apr21_2016_early'].fill(
+                dataset=dataset,
+                region=region,
+                jet_pt=normalize(candidatejet.pt, cut),
+                jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
+                jet_IN_Apr21_2016_early=normalize(candidatejet.IN_Apr21_2016_early, cut),
+            )
+            output['IN_Apr21_2016_late'].fill(
+                dataset=dataset,
+                region=region,
+                jet_pt=normalize(candidatejet.pt, cut),
+                jet_rho=normalize(2*np.log(candidatejet.msdcorr/candidatejet.pt), cut),
+                jet_IN_Apr21_2016_late=normalize(candidatejet.IN_Apr21_2016_late, cut),
+            )
 
 
         if(len(events) == 0): return output
-
+        print("HELLO!!!")
         dataset = events.metadata['dataset']
         isRealData = False
         selection = PackedSelection()
@@ -117,6 +162,8 @@ class DDTProcessor(processor.ProcessorABC):
         fatjets['IN_Sep20_2017'] = IN.Sep20_2017
         fatjets['IN_Apr21_2017_late']  = IN.Apr21_2017_late
         fatjets['IN_Apr21_2017_early'] = IN.Apr21_2017_early
+        fatjets['IN_Apr21_2016_late']  = IN.Apr21_2016_late
+        fatjets['IN_Apr21_2016_early'] = IN.Apr21_2016_early
 
 
         candidatejet = ak.firsts(fatjets)
@@ -167,9 +214,6 @@ class DDTProcessor(processor.ProcessorABC):
         for cut in cuts:
             allcuts.add(cut)
             output['cutflow'][dataset][cut] += float(weights.weight()[selection.all(*allcuts)].sum())
-
-        def normalize(val, cut):
-            return val[cut].pad(1, clip=True).fillna(0).flatten()
 
         return output
 

@@ -59,5 +59,13 @@
     "TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8": 687.1,
     "TTToHadronic_TuneCP5_13TeV-powheg-pythia8": 377.96,
     "TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8": 365.34,
-    "GluGluHToTauTau": 21.4
+    "GluGluHToTauTau": 21.4,
+    "QCD_HT1000to1500_CUET8M1_13TeV-madgraph-pythia8-2016": 1064.0,
+    "QCD_HT100to200_CUET8M1_13TeV-madgraph-pythia8-2016": 9999999.0,
+    "QCD_HT1500to2000_CUET8M1_13TeV-madgraph-pythia8-2016": 121.5,
+    "QCD_HT2000toInf_CUET8M1_13TeV-madgraph-pythia8-2016": 25.42,
+    "QCD_HT300to500_CUET8M1_13TeV-madgraph-pythia8-2016": 366800.0,
+    "QCD_HT500to700_CUET8M1_13TeV-madgraph-pythia8-2016": 29370.0,
+    "QCD_HT50to100_CUET8M1_13TeV-madgraph-pythia8": 9999999.0,
+    "QCD_HT700to1000_CUET8M1_13TeV-madgraph-pythia8-2016": 6524.0
 }
